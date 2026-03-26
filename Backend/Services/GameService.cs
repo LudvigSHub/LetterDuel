@@ -2,14 +2,20 @@
 
 namespace LetterDuel.Backend.Services
 {
+    //ansvarar för spelets regler och flöde
+    // här hanteras skapande av spel, spelare, bokstavsgissningar, poäng och vinnare
     public class GameService
     {
+        //skapar ett nytt game och ersätter startvärden för spelets state
         public Game CreateGame(string secretWord)
         {
             return new Game
             {
+                //ordet sparas i versaler för att förenkla jämförelser av bokstäver
                 SecretWord = secretWord.ToUpperInvariant(),
+                //ett nytt spel börjar altid med att vänta på spelare
                 State = GameState.WaitingForPlayers,
+                //första spelaren i listan får första turen när spelet startar
                 CurrentPlayerIndex = 0
             };
         }
