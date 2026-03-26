@@ -39,28 +39,36 @@ namespace LetterDuel.Backend.Services
             }
         }
 
+        //hanterar en spelares bokstavsgissning
         public void GuessLetter(Game game, Guid playerId, char letter)
         {
+            //det går bara att gissa när spel är igång
             if (game.State != GameState.InProgress)
             {
                 throw new InvalidOperationException("Game is not in progress");
             }
 
+            //kontrollera att det är rätt spelares tur
             if (game.Players[game.CurrentPlayerIndex].Id != playerId)
             {
                 throw new InvalidOperationException("It is not this players turn");
             }
+            //bokstaven görs om till versal för att matcha sparade ordet
             letter = char.ToUpperInvariant(letter);
 
+            //samma bokstav får inte gissas flera gånger
             if (game.GuessedLetters.Contains(letter))
             {
                 throw new InvalidOperationException("Letter has already been guessed.");
             }
+            //sparar bokstaven som "Guessed"
             game.GuessedLetters.Add(letter);
 
+            //om bokstaven finns i ordet får spelaren poäng
             if (game.SecretWord.Contains(letter))
             {
                 var currentPlayer = game.Players[game.CurrentPlayerIndex];
+
                 currentPlayer.Score += IsVowel(letter) ? 2 : 4;
             }
 
