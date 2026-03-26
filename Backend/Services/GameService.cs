@@ -79,5 +79,19 @@ namespace LetterDuel.Backend.Services
                 .Distinct()
                 .All(letter => game.GuessedLetters.Contains(letter));
         }
+
+        //returnerar vinnaren när spelet är färdigt
+        public Player? GetWinner(Game game)
+        {
+            //Ingen vinnare kan utses innan spel är färdigt
+            if (game.State != GameState.GameFinished)
+            {
+                return null;
+            }
+            //spelaren med högst poäng vinner
+            return game.Players
+                .OrderByDescending(player => player.Score)
+                .FirstOrDefault();
+        }
     }
 }
