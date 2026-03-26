@@ -9,7 +9,7 @@
         public GameState State { get; set; }
         public List<Player> Players { get; } = new();
         //sparar bokstäver som redan gissats
-        public HashSet<char> GuessedLetters { get; } = new();
+        public string GuessedLetters { get; set; } = string.Empty;
         public int CurrentPlayerIndex { get; set; }
         public Guid? CurrentTurnPlayerId { get; private set; }
 
