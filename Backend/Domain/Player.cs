@@ -6,6 +6,9 @@
         // utan att vara beroende av en databas eller en räknare som genererar löpnummer. 
         public Guid Id { get; init; } = Guid.NewGuid();
         //spelarens namn
+        
+        // Kopplar spelaren till det spel som den tillhör.
+        public Guid GameId { get; set; }
         public string Name { get; set; }
         //spelarens nuvarande poäng under nuvarande spel
         public int Score { get; set; }
