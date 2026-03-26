@@ -8,7 +8,7 @@ namespace LetterDuel.Tests
     public class PlayerTests
     {
         [Fact]
-        //För spelarens score=0
+        //För spelarens start - score=0
         public void PlayerScore_0()
         {
             var player = new Player();

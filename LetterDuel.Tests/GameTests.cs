@@ -9,6 +9,7 @@ namespace LetterDuel.Tests
     public class GameTests
     {
         [Fact]
+        //game väntar på spelare
         public void NewGameWaitingForPlayers()
         {
             var game = new Game("apple");
@@ -18,6 +19,7 @@ namespace LetterDuel.Tests
         }
 
         [Fact]
+        //game gör ordet till stora bokstäver
         public void NewGame_WordInUpperCase()
         {
             var game = new Game("apple");
@@ -25,7 +27,8 @@ namespace LetterDuel.Tests
             Assert.Equal("APPLE", game.SecretWord);
         }
 
-        [Fact] 
+        [Fact]
+        //game ordets längd i bokstäver
         public void NewGame_WordLength()
         {
             var game = new Game("apple");
@@ -34,6 +37,7 @@ namespace LetterDuel.Tests
         }
 
         [Fact]
+        //game startar med inga spelare
         public void NewGame_StartWithNoPlayers()
         {
             var game = new Game("apple");
@@ -42,6 +46,7 @@ namespace LetterDuel.Tests
         }
 
         [Fact]
+        //game startar med inga gissade bokstäver
         public void NewGame_StartWithNoGuessedLetters()
         {
             var game = new Game("apple");
