@@ -1,7 +1,39 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+@inject NavigationManager Nav
 
-<PageTitle>Home</PageTitle>
+<PageTitle>LetterDuel</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="container mt-5">
+    <h1 class="text-center mb-4">⚔️ LetterDuel</h1>
 
-Welcome to your new app.
+    <div class="row justify-content-center">
+        <div class="col-md-4 text-center">
+            <button class="btn btn-primary btn-lg w-100 mb-3" @onclick="CreateGame">
+                Create Game
+            </button>
+
+            <hr />
+
+            <input class="form-control mb-2" placeholder="Enter Game ID" @bind="joinGameId" />
+            <button class="btn btn-secondary w-100" @onclick="JoinGame">
+                Join Game
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string joinGameId = "";
+
+    private void CreateGame()
+    {
+        // TODO: anropa API och få ett riktigt gameId
+        Nav.NavigateTo("/game/123");
+    }
+
+    private void JoinGame()
+    {
+        Nav.NavigateTo($"/game/{joinGameId}");
+    }
+}

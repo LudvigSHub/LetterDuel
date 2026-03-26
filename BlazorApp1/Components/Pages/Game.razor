@@ -1,0 +1,103 @@
+﻿@page "/game/{GameId}"
+@rendermode InteractiveServer
+
+<PageTitle>LetterDuel - Game</PageTitle>
+
+<div class="container mt-4">
+
+    <!-- Poängrad -->
+    <div class="row text-center mb-4">
+        <div class="col">
+            <h5>@player1Name</h5>
+            <span class="badge bg-primary fs-5">@player1Score p</span>
+            @if (currentTurn == 1)
+            {
+                <div><span class="badge bg-success mt-1">Your turn</span></div>
+            }
+        </div>
+        <div class="col">
+            <h5>VS</h5>
+        </div>
+        <div class="col">
+            <h5>@player2Name</h5>
+            <span class="badge bg-danger fs-5">@player2Score p</span>
+            @if (currentTurn == 2)
+            {
+                <div><span class="badge bg-success mt-1">Your turn</span></div>
+            }
+        </div>
+    </div>
+
+    <!-- Ordet -->
+    <div class="text-center mb-4">
+        <div class="d-flex justify-content-center gap-2 flex-wrap">
+            @foreach (var ch in maskedWord)
+            {
+                <div class="border border-2 d-flex align-items-center justify-content-center"
+                     style="width:50px;height:60px;font-size:1.8rem;font-weight:bold;">
+                    @(ch == '_' ? "" : ch.ToString())
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Gissade bokstäver -->
+    <div class="text-center mb-4">
+        <p><strong>Guessed letters:</strong> @string.Join(", ", guessedLetters)</p>
+    </div>
+
+    <!-- Input -->
+    <div class="row justify-content-center mb-3">
+        <div class="col-md-3 text-center">
+            <input class="form-control text-center mb-2"
+                   maxlength="1"
+                   placeholder="A-Z"
+                   @bind="currentGuess" />
+            <button class="btn btn-success w-100" @onclick="MakeGuess">
+                Guess!
+            </button>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    [Parameter] public string GameId { get; set; } = "";
+
+    // Dummy data
+    private string player1Name = "LingonMats";
+    private string player2Name = "GrötGöran";
+    private int player1Score = 0;
+    private int player2Score = 0;
+    private int currentTurn = 1;
+    private string secretWord = "APPLE";
+    private List<char> maskedWord = new();
+    private List<string> guessedLetters = new();
+    private string currentGuess = "";
+
+    protected override void OnInitialized()
+    {
+        maskedWord = secretWord.Select(_ => '_').ToList();
+    }
+
+    private void MakeGuess()
+    {
+        if (string.IsNullOrWhiteSpace(currentGuess)) return;
+
+        var letter = currentGuess.ToUpper()[0];
+
+        if (!guessedLetters.Contains(letter.ToString()))
+        {
+            guessedLetters.Add(letter.ToString());
+
+            for (int i = 0; i < secretWord.Length; i++)
+            {
+                if (secretWord[i] == letter)
+                    maskedWord[i] = letter;
+            }
+        }
+
+        currentTurn = currentTurn == 1 ? 2 : 1;
+        currentGuess = "";
+    }
+}
