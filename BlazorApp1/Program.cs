@@ -1,4 +1,4 @@
-using BlazorApp1.Components;
+using LetterDuel.UI.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
