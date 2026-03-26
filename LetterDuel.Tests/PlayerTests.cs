@@ -45,5 +45,15 @@ namespace LetterDuel.Tests
         }
 
         [Fact]
+        //spelarens gameId = notnull
+        public void PlayerGameId_NotNull()
+        {
+            var player = new Player() 
+            { 
+                GameId = Guid.NewGuid() 
+            };
+
+            Assert.NotEqual(Guid.Empty, player.GameId);
+        }
     }
 }
