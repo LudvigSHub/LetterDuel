@@ -93,5 +93,11 @@ namespace LetterDuel.Backend.Services
                 .OrderByDescending(player => player.Score)
                 .FirstOrDefault();
         }
+
+        //hjälpmetod som avngör om bokstav = vokal.. engelska
+        private bool IsVowel(char letter)
+        {
+            return "AEIOUY".Contains(letter);
+        }
     }
 }
