@@ -8,6 +8,16 @@ namespace LetterDuel.Tests
 {
     public class GameTests
     {
+
+        [Fact]
+        //Game får unikt id
+        public void NewGame_GetsUniqueId()
+        {
+            var game = new Game("apple");
+
+            Assert.NotEqual(Guid.Empty, game.Id);
+        }
+
         [Fact]
         //game väntar på spelare
         public void NewGameWaitingForPlayers()
