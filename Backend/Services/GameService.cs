@@ -68,15 +68,17 @@ namespace LetterDuel.Backend.Services
             if (game.SecretWord.Contains(letter))
             {
                 var currentPlayer = game.Players[game.CurrentPlayerIndex];
-
+                //vokaler ger 2 poäng, konsonanter ger 4, modellen nedan innehåller alla vokaler
                 currentPlayer.Score += IsVowel(letter) ? 2 : 4;
             }
 
+            //om alla bokstaver i ordet är gissade avslutas spelet
             if (IsWordFullyGuessed(game))
             {
                 game.State = GameState.GameFinished;
                 return;
             }
+            //byter tur till nästa spelare
             game.CurrentPlayerIndex = (game.CurrentPlayerIndex + 1) % game.Players.Count;
         }
 
