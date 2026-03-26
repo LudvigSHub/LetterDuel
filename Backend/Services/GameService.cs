@@ -60,6 +60,16 @@ namespace LetterDuel.Backend.Services
                 game.State = GameState.GameFinished;
                 return;
             }
+            game.CurrentPlayerIndex = (game.CurrentPlayerIndex + 1) % game.Players.Count;
+        }
+
+        //returnerar ordet i maskerad form, där ogissade bokstäver visas som _.
+        public string GetMaskedWord(Game game)
+        {
+            return new string(
+                game.SecretWord
+                .Select(letter => game.GuessedLetters.Contains(letter) ? letter : '_')
+                .ToArray());
         }
     }
 }
