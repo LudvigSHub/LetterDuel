@@ -9,7 +9,7 @@
         
         // Kopplar spelaren till det spel som den tillhör.
         public Guid GameId { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
         //spelarens nuvarande poäng under nuvarande spel
         public int Score { get; set; }
     }
