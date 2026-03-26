@@ -57,12 +57,14 @@ namespace LetterDuel.Backend.Services
             letter = char.ToUpperInvariant(letter);
 
             //samma bokstav får inte gissas flera gånger
+            //sparar bokstaven som "Guessed"
             if (game.GuessedLetters.Contains(letter))
             {
                 throw new InvalidOperationException("Letter has already been guessed.");
             }
-            //sparar bokstaven som "Guessed"
-            game.GuessedLetters.Add(letter);
+
+            game.GuessedLetters += letter;
+
 
             //om bokstaven finns i ordet får spelaren poäng
             if (game.SecretWord.Contains(letter))
