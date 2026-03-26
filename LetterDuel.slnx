@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="Backend/LetterDuel.Backend.csproj" />
   <Project Path="BlazorApp1/LetterDuel.UI.csproj" />
-  <Project Path="LetterDuel.Tests/LetterDuel.Tests.csproj" Id="3c5957cb-031a-4c74-a56a-850feddaf986" />
+  <Project Path="LetterDuel.Tests/LetterDuel.Tests.csproj" Id="3c5957cb-031a-4c74-a56a-850feddaf986">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
 </Solution>
