@@ -71,5 +71,13 @@ namespace LetterDuel.Backend.Services
                 .Select(letter => game.GuessedLetters.Contains(letter) ? letter : '_')
                 .ToArray());
         }
+
+        //Kollar om alla unika bokstäver i ordet har blivit gissade
+        public bool IsWordFullyGuessed(Game game)
+        {
+            return game.SecretWord
+                .Distinct()
+                .All(letter => game.GuessedLetters.Contains(letter));
+        }
     }
 }
