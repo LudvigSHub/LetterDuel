@@ -75,11 +75,13 @@ namespace LetterDuel.Backend.Services
                 currentplayer.Score += IsVowel(letter) ? 2 : 4;
             }
             //om alla bokstäver är gissade, avsluta Game
-            if (IsWordFullyGuessed(Game))
+            if (IsWordFullyGuessed(game))
             {
                 game.State = GameState.GameFinished;
                 return;
             }
+
+            game.CurrentPlayerIndex = (game.CurrentPlayerIndex + 1) % game.Players.Count;
         }
 
         //returnerar ordet i maskerad form, där ogissade bokstäver visas som _.
