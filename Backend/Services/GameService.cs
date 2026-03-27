@@ -1,5 +1,4 @@
 ﻿using LetterDuel.Backend.Domain;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
 
 namespace LetterDuel.Backend.Services
 {
@@ -41,7 +40,7 @@ namespace LetterDuel.Backend.Services
         }
 
         //hanterar en spelares bokstavsgissning
-        public void GuessLetter(Game game, Guid playerId, char letter)
+        public void GuessLetter(Game game, Guid playerId, string input)
         {
             //det går bara att gissa när spel är igång
             if (game.State != GameState.InProgress)
@@ -54,26 +53,31 @@ namespace LetterDuel.Backend.Services
             {
                 throw new InvalidOperationException("It is not this players turn");
             }
-            //bokstaven görs om till versal för att matcha sparade ordet
-            letter = char.ToUpperInvariant(letter);
-            //kontroll om det är en engelsk bokstav
-            if (!IsEnglishLetter(letter))
+
+            //kontroll om input är exakt 1 bokstav från det engelska alfabetet
+            if (!IsSingleEnglishLetter(input))
             {
-                throw new InvalidOperationException("Only letters in the English alphabet A-Z");
+                throw new InvalidOperationException("Only letters in the English alphabet A-Z are allowed.");
             }
+
+            //bokstaven görs om till versal för att matcha sparade ordet
+            char letter = char.ToUpperInvariant(input[0]);
+
             //Om bokstaven redan gissats.
             if (game.GuessedLetters.Contains(letter))
             {
                 throw new InvalidOperationException("Letter has already been guessed.");
             }
-            
+
             game.GuessedLetters += letter;
+
             //om gissning är rätt
             if (game.SecretWord.Contains(letter))
             {
                 var currentplayer = game.Players[game.CurrentPlayerIndex];
                 currentplayer.Score += IsVowel(letter) ? 2 : 4;
             }
+
             //om alla bokstäver är gissade, avsluta Game
             if (IsWordFullyGuessed(game))
             {
@@ -129,9 +133,8 @@ namespace LetterDuel.Backend.Services
                 return false;
             }
 
-                char letter = char.ToUpperInvariant(input[0]);
-                return letter >= 'A' && letter <= 'Z';
+            char letter = char.ToUpperInvariant(input[0]);
+            return letter >= 'A' && letter <= 'Z';
         }
-
     }
 }
