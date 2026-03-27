@@ -121,10 +121,17 @@ namespace LetterDuel.Backend.Services
             return "AEIOUY".Contains(letter);
         }
 
-        //hjälpmetod för engelska bokstäver
-        private bool IsEnglishLetter(char letter)
+        //hjälpmetod för engelska bokstäver + att input = 1 karaktär
+        private bool IsSingleEnglishLetter(string input)
         {
-            return letter >= 'A' && letter <= 'Z';
+            if (string.IsNullOrWhiteSpace(input) || input.Length != 1)
+            {
+                return false;
+            }
+
+                char letter = char.ToUpperInvariant(input[0]);
+                return letter >= 'A' && letter <= 'Z';
         }
+
     }
 }
