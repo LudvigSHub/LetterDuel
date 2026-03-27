@@ -1,4 +1,5 @@
 ﻿using LetterDuel.Backend.Domain;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 
 namespace LetterDuel.Backend.Services
 {
@@ -55,33 +56,24 @@ namespace LetterDuel.Backend.Services
             }
             //bokstaven görs om till versal för att matcha sparade ordet
             letter = char.ToUpperInvariant(letter);
-
-            //samma bokstav får inte gissas flera gånger
-            //sparar bokstaven som "Guessed"
+            //kontroll om det är en engelsk bokstav
+            if (!IsEnglishLetter(letter))
+            {
+                throw new InvalidOperationException("Only letters in the English alphabet A-Z");
+            }
+            //Om bokstaven redan gissats.
             if (game.GuessedLetters.Contains(letter))
             {
                 throw new InvalidOperationException("Letter has already been guessed.");
             }
-
+            
             game.GuessedLetters += letter;
-
-
-            //om bokstaven finns i ordet får spelaren poäng
+            //om gissning är rätt
             if (game.SecretWord.Contains(letter))
             {
-                var currentPlayer = game.Players[game.CurrentPlayerIndex];
-                //vokaler ger 2 poäng, konsonanter ger 4, modellen nedan innehåller alla vokaler
-                currentPlayer.Score += IsVowel(letter) ? 2 : 4;
+                var currentplayer = game.Players[game.CurrentPlayerIndex];
+                currentplayer.Score += IsVowel(letter) ? 2 : 4;
             }
-
-            //om alla bokstaver i ordet är gissade avslutas spelet
-            if (IsWordFullyGuessed(game))
-            {
-                game.State = GameState.GameFinished;
-                return;
-            }
-            //byter tur till nästa spelare
-            game.CurrentPlayerIndex = (game.CurrentPlayerIndex + 1) % game.Players.Count;
         }
 
         //returnerar ordet i maskerad form, där ogissade bokstäver visas som _.
@@ -119,6 +111,12 @@ namespace LetterDuel.Backend.Services
         private bool IsVowel(char letter)
         {
             return "AEIOUY".Contains(letter);
+        }
+
+        //hjälpmetod för engelska bokstäver
+        private bool IsEnglishLetter(char letter)
+        {
+            return letter >= 'A' && letter <= 'Z';
         }
     }
 }
