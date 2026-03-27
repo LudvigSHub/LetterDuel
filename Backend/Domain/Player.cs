@@ -12,5 +12,6 @@
         public string Name { get; set; } = string.Empty;
         //spelarens nuvarande poäng under nuvarande spel
         public int Score { get; set; }
+        public Game Game { get; set; } = null!;
     }
 }
