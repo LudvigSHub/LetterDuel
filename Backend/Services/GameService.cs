@@ -74,6 +74,12 @@ namespace LetterDuel.Backend.Services
                 var currentplayer = game.Players[game.CurrentPlayerIndex];
                 currentplayer.Score += IsVowel(letter) ? 2 : 4;
             }
+            //om alla bokstäver är gissade, avsluta Game
+            if (IsWordFullyGuessed(Game))
+            {
+                game.State = GameState.GameFinished;
+                return;
+            }
         }
 
         //returnerar ordet i maskerad form, där ogissade bokstäver visas som _.
