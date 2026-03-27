@@ -13,7 +13,9 @@ namespace LetterDuel.Tests
         //Game får unikt id
         public void NewGame_GetsUniqueId()
         {
-            var game = new Game("apple");
+            var game = new Game();
+            game.SecretWord = "APPLE";
+            
 
             Assert.NotEqual(Guid.Empty, game.Id);
         }
@@ -22,7 +24,9 @@ namespace LetterDuel.Tests
         //game väntar på spelare
         public void NewGameWaitingForPlayers()
         {
-            var game = new Game("apple");
+            var game = new Game();
+            game.SecretWord = "APPLE";
+
 
             Assert.Equal(GameState.WaitingForPlayers, game.State);
 
@@ -32,7 +36,9 @@ namespace LetterDuel.Tests
         //game gör ordet till stora bokstäver
         public void NewGame_WordInUpperCase()
         {
-            var game = new Game("apple");
+            var game = new Game();
+            game.SecretWord = "APPLE";
+
 
             Assert.Equal("APPLE", game.SecretWord);
         }
@@ -41,7 +47,9 @@ namespace LetterDuel.Tests
         //game ordets längd i bokstäver
         public void NewGame_WordLength()
         {
-            var game = new Game("apple");
+            var game = new Game();
+            game.SecretWord = "APPLE";
+
 
             Assert.Equal(5, game.WordLength);
         }
@@ -50,7 +58,9 @@ namespace LetterDuel.Tests
         //game startar med inga spelare
         public void NewGame_StartWithNoPlayers()
         {
-            var game = new Game("apple");
+            var game = new Game();
+            game.SecretWord = "APPLE";
+
 
             Assert.Empty(game.Players);
         }
@@ -59,7 +69,9 @@ namespace LetterDuel.Tests
         //game startar med inga gissade bokstäver
         public void NewGame_StartWithNoGuessedLetters()
         {
-            var game = new Game("apple");
+            var game = new Game();
+            game.SecretWord = "APPLE";
+
 
             Assert.Empty(game.GuessedLetters);
         }
