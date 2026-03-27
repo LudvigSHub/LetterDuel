@@ -11,7 +11,7 @@
         //sparar bokstäver som redan gissats
         public string GuessedLetters { get; set; } = string.Empty;
         public int CurrentPlayerIndex { get; set; }
-        public Guid? CurrentTurnPlayerId { get; private set; }
+        
 
         //hjälp-egenskap för att kunna visa ordets längd i UI
         public int WordLength => SecretWord.Length;
