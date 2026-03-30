@@ -1,29 +1,45 @@
 ﻿@page "/game/{GameId}"
 @rendermode InteractiveServer
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 <PageTitle>LetterDuel - Game</PageTitle>
 
 <div class="container mt-4">
 
+    <div class="text-center mb-3">
+        <span class="badge @(myPlayerNumber == 1 ? "bg-primary" : "bg-danger") fs-6">
+            You are Player @myPlayerNumber
+        </span>
+    </div>
+
     <!-- Poängrad -->
     <div class="row text-center mb-4">
         <div class="col">
-            <h5>@player1Name</h5>
+            <h5>Player 1</h5>
             <span class="badge bg-primary fs-5">@player1Score p</span>
             @if (currentTurn == 1)
             {
-                <div><span class="badge bg-success mt-1">Your turn</span></div>
+                <div>
+                    <span class="badge bg-success mt-1">
+                        @(myPlayerNumber == 1 ? "Your turn!" : "Their turn")
+                    </span>
+                </div>
             }
         </div>
-        <div class="col">
+        <div class="col-auto align-self-center">
             <h5>VS</h5>
         </div>
         <div class="col">
-            <h5>@player2Name</h5>
+            <h5>Player 2</h5>
             <span class="badge bg-danger fs-5">@player2Score p</span>
             @if (currentTurn == 2)
             {
-                <div><span class="badge bg-success mt-1">Your turn</span></div>
+                <div>
+                    <span class="badge bg-success mt-1">
+                        @(myPlayerNumber == 2 ? "Your turn!" : "Their turn")
+                    </span>
+                </div>
             }
         </div>
     </div>
@@ -46,16 +62,23 @@
         <p><strong>Guessed letters:</strong> @string.Join(", ", guessedLetters)</p>
     </div>
 
-    <!-- Input -->
+    <!-- Input — bara när det är din tur -->
     <div class="row justify-content-center mb-3">
         <div class="col-md-3 text-center">
-            <input class="form-control text-center mb-2"
-                   maxlength="1"
-                   placeholder="A-Z"
-                   @bind="currentGuess" />
-            <button class="btn btn-success w-100" @onclick="MakeGuess">
-                Guess!
-            </button>
+            @if (currentTurn == myPlayerNumber)
+            {
+                <input class="form-control text-center mb-2"
+                       maxlength="1"
+                       placeholder="A-Z"
+                       @bind="currentGuess" />
+                <button class="btn btn-success w-100" @onclick="MakeGuess">
+                    Guess!
+                </button>
+            }
+            else
+            {
+                <p class="text-muted fst-italic">Waiting for other player...</p>
+            }
         </div>
     </div>
 
@@ -64,9 +87,10 @@
 @code {
     [Parameter] public string GameId { get; set; } = "";
 
-    // Dummy data
-    private string player1Name = "LingonMats";
-    private string player2Name = "GrötGöran";
+    private string playerToken = "";
+    private int myPlayerNumber = 0;
+
+    // Game state - dummy data
     private int player1Score = 0;
     private int player2Score = 0;
     private int currentTurn = 1;
@@ -75,9 +99,34 @@
     private List<string> guessedLetters = new();
     private string currentGuess = "";
 
+    private Timer? _timer;
+
     protected override void OnInitialized()
     {
         maskedWord = secretWord.Select(_ => '_').ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            playerToken = await JS.InvokeAsync<string>("localStorage.getItem", "playerToken") ?? "";
+            myPlayerNumber = new Random().Next(1, 3); // TODO: ersätt med riktigt API-anrop
+
+            _timer = new Timer(async _ =>
+            {
+                await RefreshGameState();
+                await InvokeAsync(StateHasChanged);
+            }, null, 0, 800);
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshGameState()
+    {
+        // TODO: anropa GET /api/games/{GameId}
+        await Task.CompletedTask;
     }
 
     private void MakeGuess()
@@ -95,9 +144,23 @@
                 if (secretWord[i] == letter)
                     maskedWord[i] = letter;
             }
+
+            bool isCorrect = secretWord.Contains(letter);
+            if (isCorrect)
+            {
+                bool isVowel = "AEIOUY".Contains(letter);
+                if (currentTurn == 1) player1Score += isVowel ? 2 : 4;
+                else player2Score += isVowel ? 2 : 4;
+            }
         }
 
         currentTurn = currentTurn == 1 ? 2 : 1;
         currentGuess = "";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_timer != null)
+            await _timer.DisposeAsync();
     }
 }

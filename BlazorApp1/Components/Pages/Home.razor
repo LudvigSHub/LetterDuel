@@ -1,39 +1,100 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <PageTitle>LetterDuel</PageTitle>
 
 <div class="container mt-5">
     <h1 class="text-center mb-4">⚔️ LetterDuel</h1>
 
-    <div class="row justify-content-center">
-        <div class="col-md-4 text-center">
-            <button class="btn btn-primary btn-lg w-100 mb-3" @onclick="CreateGame">
-                Create Game
-            </button>
+    @if (createdGameId == "")
+    {
+        <div class="row justify-content-center">
+            <div class="col-md-4 text-center">
+                <button class="btn btn-primary btn-lg w-100 mb-3" @onclick="CreateGame">
+                    Create Game
+                </button>
 
-            <hr />
+                <hr />
 
-            <input class="form-control mb-2" placeholder="Enter Game Link" @bind="joinGameId" />
-            <button class="btn btn-secondary w-100" @onclick="JoinGame">
-                Join Game
-            </button>
+                <input class="form-control mb-2" placeholder="Enter Game ID" @bind="joinGameId" />
+                <button class="btn btn-secondary w-100" @onclick="JoinGame">
+                    Join Game
+                </button>
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="row justify-content-center">
+            <div class="col-md-5 text-center">
+                <div class="alert alert-success">
+                    <p class="mb-1">Game created! Share this link with Player 2:</p>
+                    <strong>@joinLink</strong>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm mb-3" @onclick="CopyLink">
+                    📋 Copy Link
+                </button>
+                <br />
+                <button class="btn btn-primary w-100" @onclick="GoToGame">
+                    Enter Game as Player 1
+                </button>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
-    private string joinGameId = "";
+    [Parameter, SupplyParameterFromQuery]
+    public string? Join { get; set; }
 
-    private void CreateGame()
+    private string joinGameId = "";
+    private string createdGameId = "";
+    private string joinLink = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // TODO: anropa API och få ett riktigt gameId
-        Nav.NavigateTo("/game/123");
+        if (firstRender && !string.IsNullOrEmpty(Join))
+        {
+            await JoinAndNavigate(Join);
+        }
     }
 
-    private void JoinGame()
+    private async Task CreateGame()
     {
-        Nav.NavigateTo($"/game/{joinGameId}");
+        var gameId = "123"; // dummy
+        var playerToken = Guid.NewGuid().ToString(); // dummy
+
+        await JS.InvokeVoidAsync("localStorage.setItem", "playerToken", playerToken);
+        await JS.InvokeVoidAsync("localStorage.setItem", "gameId", gameId);
+
+        createdGameId = gameId;
+        joinLink = $"{Nav.BaseUri}?join={gameId}";
+    }
+
+    private async Task JoinGame()
+    {
+        await JoinAndNavigate(joinGameId);
+    }
+
+    private async Task JoinAndNavigate(string gameId)
+    {
+        var playerToken = Guid.NewGuid().ToString(); // dummy
+
+        await JS.InvokeVoidAsync("localStorage.setItem", "playerToken", playerToken);
+        await JS.InvokeVoidAsync("localStorage.setItem", "gameId", gameId);
+
+        Nav.NavigateTo($"/game/{gameId}");
+    }
+
+    private void GoToGame()
+    {
+        Nav.NavigateTo($"/game/{createdGameId}");
+    }
+
+    private async Task CopyLink()
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", joinLink);
     }
 }
