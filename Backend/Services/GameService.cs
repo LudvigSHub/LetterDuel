@@ -1,4 +1,5 @@
-﻿using LetterDuel.Backend.Domain;
+﻿using System.ComponentModel.Design;
+using LetterDuel.Backend.Domain;
 
 namespace LetterDuel.Backend.Services
 {
@@ -7,9 +8,9 @@ namespace LetterDuel.Backend.Services
     public class GameService
     {
         //skapar ett nytt game och ersätter startvärden för spelets state
-        public Game CreateGame(string secretWord)
+        public Game CreateGame(string secretWord, Player creator)
         {
-            return new Game
+            var game = new Game
             {
                 //ordet sparas i versaler för att förenkla jämförelser av bokstäver
                 SecretWord = secretWord.ToUpperInvariant(),
@@ -18,6 +19,11 @@ namespace LetterDuel.Backend.Services
                 //första spelaren i listan får första turen när spelet startar
                 CurrentPlayerIndex = 0
             };
+
+            //player1 skapas med spelet
+            creator.GameId = game.Id;
+            game.Players.Add(creator);
+            return game;
         }
 
         //Lägger till en spelare i spelet
