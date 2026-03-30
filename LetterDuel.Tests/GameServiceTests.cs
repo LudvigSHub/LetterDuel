@@ -12,6 +12,7 @@ namespace LetterDuel.Tests
 
         [Fact]
         //new game ska ha WaitingForPlayers state 
+        //creator ska vara player1 = [0]
         public void CreateGame_SetPlayer1_as_Creator()
         {
             var creator = new Player { Name = "Player1" };
@@ -20,7 +21,7 @@ namespace LetterDuel.Tests
             Assert.Single(game.Players);
             Assert.Equal(creator.Id, game.Players[0].Id);
             Assert.Equal(GameState.WaitingForPlayers, game.State);
-            Assert.Equal(game.Id, creator.Game.Id);
+            Assert.Equal(game.Id, creator.GameId);
             Assert.Equal(0, game.CurrentPlayerIndex);
         }
 
@@ -36,7 +37,6 @@ namespace LetterDuel.Tests
 
             Assert.Equal(2, game.Players.Count); //antal spelare sätts till 2
             Assert.Equal(player2.Id, game.Players[1].Id); //player2 id stämmer överens med play[1].Id
-            Assert.Equal(game.Id, creator.Game.Id);
             Assert.Equal(game.Id, player2.GameId); //player2 has same gameId as game
             Assert.Equal(GameState.InProgress, game.State); //gamestate ska sättas till InProgress när player2 joinar
         }
@@ -52,6 +52,42 @@ namespace LetterDuel.Tests
             Assert.Throws<InvalidOperationException>(action);
         }
 
+        [Fact]
+        //Game måste vara InProgress för att man ska kunna gissa
+        public void Game_Has_To_Be_In_Progress_To_Guess()
+        {
+            var creator = new Player { Name = "Player1" };
+            var game = _service.CreateGame("APPLE", creator);
+            var action = () => _service.GuessLetter(game, creator.Id, "A");
+
+            Assert.Throws<InvalidOperationException> (action);
+        }
+
+        [Fact]
+        //Player2 ska inte kunna gissa när det är P1 tur
+        public void P2_Cant_Guess_While_P1_Turn()
+        {
+            var (game, player1, player2) = CreateStartedGame();
+            var action = () => _service.GuessLetter(game, player2.Id, "A");
+
+            Assert.Throws<InvalidOperationException>(action);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData("AB")]
+        [InlineData("1")]
+        [InlineData("@")]
+        [InlineData("Å")]
+        [InlineData("Ä")]
+        [InlineData("Ö")]
+        public void Guess_Restrictionz(string input)
+        {
+            var (game, player1, player2) = CreateStartedGame();
+            var action = () => _service.GuessLetter(game, player1.Id, input);
+
+            Assert.Throws<InvalidOperationException>(action);
+        }
 
         //hjälpmetod för att skapa ett spel som är InProgress med 2 players
         private (Game game, Player player1, Player player2) CreateStartedGame(string secretWord = "APPLE")
