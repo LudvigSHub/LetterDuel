@@ -81,6 +81,7 @@ namespace LetterDuel.Tests
         [InlineData("Å")]
         [InlineData("Ä")]
         [InlineData("Ö")]
+        //restrictions, input får ej vara special chars
         public void Guess_Restrictionz(string input)
         {
             var (game, player1, player2) = CreateStartedGame();
@@ -88,6 +89,32 @@ namespace LetterDuel.Tests
 
             Assert.Throws<InvalidOperationException>(action);
         }
+
+        [Theory]
+        [InlineData("APPLE", "A", true, 2)]
+        [InlineData("BANANA", "B", true, 4)]
+        [InlineData("APPLE", "Z", false, 0)]
+        [InlineData("LETTER", "T", true, 8)]
+        //vokaler ger 2p, kononanter ger 4p, fel 0p
+        public void GuessLetter_Should_Save_Letter_And_Update_Score_Correctly
+           (string secretWord,
+            string input,
+            bool shouldExistInWord,
+            int expectedScore)
+        { 
+            var (game, player1, player2) = CreateStartedGame(secretWord); 
+            _service.GuessLetter(game,player1.Id, input);
+
+            Assert.Contains(input.ToUpperInvariant()[0], game.GuessedLetters);
+            Assert.Equal(shouldExistInWord, game.SecretWord.Contains(input.ToUpperInvariant()[0]));
+            Assert.Equal(expectedScore, player1.Score);
+
+        }
+
+
+
+
+
 
         //hjälpmetod för att skapa ett spel som är InProgress med 2 players
         private (Game game, Player player1, Player player2) CreateStartedGame(string secretWord = "APPLE")
