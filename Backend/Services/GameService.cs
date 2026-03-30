@@ -1,4 +1,5 @@
-﻿using LetterDuel.Backend.Domain;
+﻿using System.ComponentModel.Design;
+using LetterDuel.Backend.Domain;
 
 namespace LetterDuel.Backend.Services
 {
@@ -7,9 +8,9 @@ namespace LetterDuel.Backend.Services
     public class GameService
     {
         //skapar ett nytt game och ersätter startvärden för spelets state
-        public Game CreateGame(string secretWord)
+        public Game CreateGame(string secretWord, Player creator)
         {
-            return new Game
+            var game = new Game
             {
                 //ordet sparas i versaler för att förenkla jämförelser av bokstäver
                 SecretWord = secretWord.ToUpperInvariant(),
@@ -18,6 +19,11 @@ namespace LetterDuel.Backend.Services
                 //första spelaren i listan får första turen när spelet startar
                 CurrentPlayerIndex = 0
             };
+
+            //player1 skapas med spelet
+            creator.GameId = game.Id;
+            game.Players.Add(creator);
+            return game;
         }
 
         //Lägger till en spelare i spelet
@@ -40,7 +46,7 @@ namespace LetterDuel.Backend.Services
         }
 
         //hanterar en spelares bokstavsgissning
-        public void GuessLetter(Game game, Guid playerId, char letter)
+        public void GuessLetter(Game game, Guid playerId, string input)
         {
             //det går bara att gissa när spel är igång
             if (game.State != GameState.InProgress)
@@ -53,11 +59,17 @@ namespace LetterDuel.Backend.Services
             {
                 throw new InvalidOperationException("It is not this players turn");
             }
-            //bokstaven görs om till versal för att matcha sparade ordet
-            letter = char.ToUpperInvariant(letter);
 
-            //samma bokstav får inte gissas flera gånger
-            //sparar bokstaven som "Guessed"
+            //kontroll om input är exakt 1 bokstav från det engelska alfabetet
+            if (!IsSingleEnglishLetter(input))
+            {
+                throw new InvalidOperationException("Only letters in the English alphabet A-Z are allowed.");
+            }
+
+            //bokstaven görs om till versal för att matcha sparade ordet
+            char letter = char.ToUpperInvariant(input[0]);
+
+            //Om bokstaven redan gissats.
             if (game.GuessedLetters.Contains(letter))
             {
                 throw new InvalidOperationException("Letter has already been guessed.");
@@ -65,22 +77,20 @@ namespace LetterDuel.Backend.Services
 
             game.GuessedLetters += letter;
 
-
-            //om bokstaven finns i ordet får spelaren poäng
+            //om gissning är rätt
             if (game.SecretWord.Contains(letter))
             {
-                var currentPlayer = game.Players[game.CurrentPlayerIndex];
-                //vokaler ger 2 poäng, konsonanter ger 4, modellen nedan innehåller alla vokaler
-                currentPlayer.Score += IsVowel(letter) ? 2 : 4;
+                var currentplayer = game.Players[game.CurrentPlayerIndex];
+                currentplayer.Score += IsVowel(letter) ? 2 : 4;
             }
 
-            //om alla bokstaver i ordet är gissade avslutas spelet
+            //om alla bokstäver är gissade, avsluta Game
             if (IsWordFullyGuessed(game))
             {
                 game.State = GameState.GameFinished;
                 return;
             }
-            //byter tur till nästa spelare
+
             game.CurrentPlayerIndex = (game.CurrentPlayerIndex + 1) % game.Players.Count;
         }
 
@@ -119,6 +129,18 @@ namespace LetterDuel.Backend.Services
         private bool IsVowel(char letter)
         {
             return "AEIOUY".Contains(letter);
+        }
+
+        //hjälpmetod för engelska bokstäver + att input = 1 karaktär
+        private bool IsSingleEnglishLetter(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input) || input.Length != 1)
+            {
+                return false;
+            }
+
+            char letter = char.ToUpperInvariant(input[0]);
+            return letter >= 'A' && letter <= 'Z';
         }
     }
 }
