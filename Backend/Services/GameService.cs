@@ -81,7 +81,10 @@ namespace LetterDuel.Backend.Services
             if (game.SecretWord.Contains(letter))
             {
                 var currentplayer = game.Players[game.CurrentPlayerIndex];
-                currentplayer.Score += IsVowel(letter) ? 2 : 4;
+                var letterCount = game.SecretWord.Count(c => c == letter);
+                var pointsPerLetter = IsVowel(letter) ? 2 : 4;
+
+                currentplayer.Score += letterCount * pointsPerLetter;
             }
 
             //om alla bokstäver är gissade, avsluta Game
