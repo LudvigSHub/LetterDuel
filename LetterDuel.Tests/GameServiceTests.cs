@@ -111,7 +111,33 @@ namespace LetterDuel.Tests
 
         }
 
+        [Fact]
+        public void SwitchTurns_After_Guess()
+        {
+            var (game, player1, player2) = CreateStartedGame();
+            _service.GuessLetter(game, player1.Id, "A");
 
+            Assert.Equal(1, game.CurrentPlayerIndex);
+        }
+
+        [Theory]
+        [InlineData("WORD", "", "____")]
+        [InlineData("WORD", "WO", "WO__")]
+        [InlineData("WORD", "WORD", "WORD")]
+        public void GetMaskedWord_Should_Return_Correct_Masked_Word
+        (string secretWord,
+        string guessedLetters,
+        string expectedMaskedWord)
+        {
+            var creator = new Player { Name = "Player1" };
+            var game = _service.CreateGame(secretWord, creator);
+
+            game.GuessedLetters = guessedLetters;
+
+            var result = _service.GetMaskedWord(game);
+
+            Assert.Equal(expectedMaskedWord, result);
+        }
 
 
 
