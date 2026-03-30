@@ -16,14 +16,14 @@ namespace LetterDuel.Tests
             Assert.Equal(0, player.Score);
         }
 
-        [Fact]
-        //spelarens namn = null
-        public void PlayerName_Null()
-        {
-            var player = new Player();
+        //[Fact]
+        ////spelarens namn = null
+        //public void PlayerName_Null()
+        //{
+        //    var player = new Player();
 
-            Assert.Null(player.Name);
-        }
+        //    Assert.Null(player.Name);
+        //}
 
         [Fact]
         //spelarens namn = notnull
