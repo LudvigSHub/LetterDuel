@@ -1,7 +1,6 @@
 ﻿using LetterDuel.Backend.Domain;
 using LetterDuel.Backend.DTOs.Requests;
 using LetterDuel.Backend.DTOs.Responses;
-using LetterDuel.Backend.Repositories;
 using LetterDuel.Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,71 +12,38 @@ namespace LetterDuel.Backend.Controllers
     public class GameController : ControllerBase
     {
         private readonly GameService _gameService;
-        private readonly IGameRepository _gameRepository;
-
-        //Temporär lagring av spel i minnet ersätts senare med en databas
-        //private static List<Game> _games = new();
-
-        //Dependency injection av GameService som hanterar spelets logik och regler
-        public GameController(GameService gameService, IGameRepository gameRepository)
+        
+        public GameController(GameService gameService)
         {
             _gameService = gameService;
-            _gameRepository = gameRepository;
         }
 
         //Skapa nytt spel
         [HttpPost]
-        public ActionResult<Game> CreateGame(CreateGameRequest request)
+        public async Task<ActionResult<GameDto>> CreateGame(CreateGameRequest request)
         {
             //anropar service för att skapa spelet
-            var game = _gameService.CreateGame(
+            var game = await _gameService.CreateGame(
                 request.SecretWord, 
                 request.PlayerName
                 );
             //lägger till spel i minnet
-            _gameRepository.Save(game);
-
-            return Ok(new GameDto
-            {
-                Id = game.Id,
-                MaskedWord = new string(
-                game.SecretWord.Select(letter =>
-                    game.GuessedLetters.Contains(letter) ? letter : '_'
-                ).ToArray()
-            ),
-                Players = game.Players.Select(p => new PlayerDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Score = p.Score
-                }).ToList(),
-                State = game.State.ToString(),
-                CurrentPlayerId = game.Players[game.CurrentPlayerIndex].Id,
-                GuessedLetters = game.GuessedLetters.OrderBy(l => l).ToList(),
-                WinnerId = game.State == GameState.GameFinished
-                ? game.Players.OrderByDescending(p => p.Score).First().Id
-                : null
-                    });
+                return Ok(MapToDto(game));
         }
 
         //gå med i spel (player2)
         [HttpPost("{gameId}/join")]
-        public ActionResult JoinGame(Guid gameId, JoinGameRequest request)
+        public async Task<ActionResult<GameDto>> JoinGame(Guid gameId, JoinGameRequest request)
         {
-            //hämtar spel från databas
-            var game = _gameRepository.GetById(gameId);
-
-            if (game == null)
-            {
-                return NotFound("Game not found");
-            }
 
             try
             {
-                //lägger till player2 i spelet
-                _gameService.AddPlayer(game, request.PlayerName);
-                //sparar uppdaterat spel i db
-                _gameRepository.Save(game);
+                var game = await _gameService.AddPlayer(gameId, request.PlayerName);
+
+                if (game == null)
+                    return NotFound("Game not found");
+
+                return Ok(MapToDto(game));
             }
             //om spel tex har 2 spelare redan
             catch (InvalidOperationException ex)
@@ -85,92 +51,51 @@ namespace LetterDuel.Backend.Controllers
                 return BadRequest(ex.Message);
             }
 
-            return Ok(new GameDto
-            {
-                Id = game.Id,
-                MaskedWord = new string(
-                game.SecretWord.Select(letter =>
-                game.GuessedLetters.Contains(letter) ? letter : '_'
-                ).ToArray()
-                ),
-                Players = game.Players.Select(p => new PlayerDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Score = p.Score
-                }).ToList(),
-                State = game.State.ToString(),
-                CurrentPlayerId = game.Players[game.CurrentPlayerIndex].Id,
-                GuessedLetters = game.GuessedLetters.OrderBy(l => l).ToList(),
-                WinnerId = game.State == GameState.GameFinished
-                ? game.Players.OrderByDescending(p => p.Score).First().Id
-                : null
-                    });
-            }
+        }
 
         //gissning av bokstav
         [HttpPost("{gameId}/guess")] 
-        public ActionResult Guess(Guid gameId, GuessRequest request)
+        public async Task<ActionResult<GameDto>> Guess(Guid gameId, GuessRequest request)
         {
-            //hämtar spel
-            var game = _gameRepository.GetById(gameId);
-
-
-            if (game == null)
-                return NotFound("Game not found");
-            //spelservice hanterar gissning av bokstav och uppdaterar spelets state
             try
             {
-                _gameService.GuessLetter(game, request.PlayerId, request.Letter);
-                _gameRepository.Save(game); //sparar game i db
+                var game = await _gameService.GuessLetter(
+                    gameId,
+                    request.PlayerId,
+                    request.Letter
+                    );
+                
+                if (game == null)
+                    return NotFound("Game not found");
+
+                return Ok(MapToDto(game));
             }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(ex.Message);
             }
-
-            return Ok(new GameDto
-            {
-                Id = game.Id,
-                MaskedWord = new string(
-                game.SecretWord.Select(letter =>
-                game.GuessedLetters.Contains(letter) ? letter : '_'
-                ).ToArray()
-                ),
-                Players = game.Players.Select(p => new PlayerDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Score = p.Score
-                }).ToList(),
-                State = game.State.ToString(),
-                CurrentPlayerId = game.Players[game.CurrentPlayerIndex].Id,
-                GuessedLetters = game.GuessedLetters.OrderBy(l => l).ToList(),
-                WinnerId = game.State == GameState.GameFinished
-                ? game.Players.OrderByDescending(p => p.Score).First().Id
-                : null
-                });
         }
 
         //hämtar spelstatus
         [HttpGet("{gameId}")] 
-        public ActionResult<GameDto> GetGame(Guid gameId)
+        public async Task<ActionResult<GameDto>> GetGame(Guid gameId)
         {
             //hämtar spel
-            var game = _gameRepository.GetById(gameId);
+            var game = await _gameService.GetGame(gameId);
 
             if (game == null)
                 return NotFound("Game not found");
 
-            //returnerar spelet med aktuell status
-            return Ok(new GameDto
+            return Ok(MapToDto(game));
+        }
+
+        // DTO mapping
+        private GameDto MapToDto(Domain.Game game)
+        {
+            return new GameDto
             {
                 Id = game.Id,
-                MaskedWord = new string(
-                game.SecretWord.Select(letter =>
-                    game.GuessedLetters.Contains(letter) ? letter : '_'
-                ).ToArray()
-                ),
+                MaskedWord = _gameService.GetMaskedWord(game),
                 Players = game.Players.Select(p => new PlayerDto
                 {
                     Id = p.Id,
@@ -179,11 +104,9 @@ namespace LetterDuel.Backend.Controllers
                 }).ToList(),
                 State = game.State.ToString(),
                 CurrentPlayerId = game.Players[game.CurrentPlayerIndex].Id,
-                GuessedLetters = game.GuessedLetters.OrderBy(l => l).ToList(),
-                WinnerId = game.State == GameState.GameFinished
-                ? game.Players.OrderByDescending(p => p.Score).First().Id
-                : null
-            });
-        }   
+                GuessedLetters = _gameService.GetGuessedLetters(game),
+                WinnerId = _gameService.GetWinner(game)?.Id
+            };
+        }
     }
 }
