@@ -185,6 +185,7 @@ namespace LetterDuel.Tests
         }
 
         [Fact]
+        //GetWinner ska returnera den spelare som har högst poäng
         public void GetWinner_Test()
         {
             var (game, player1, player2) = CreateStartedGame("AB");
