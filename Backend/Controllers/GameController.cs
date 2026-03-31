@@ -26,11 +26,11 @@ namespace LetterDuel.Backend.Controllers
         [HttpPost]
         public ActionResult<Game> CreateGame(CreateGameRequest request)
         {
-            //skapar första spelaren (creator)
-            var player = new Player { Name = request.PlayerName };
-
             //anropar service för att skapa spelet
-            var game = _gameService.CreateGame(request.SecretWord, player);
+            var game = _gameService.CreateGame(
+                request.SecretWord, 
+                request.PlayerName
+                );
             //lägger till spel i minnet
             _games.Add(game);
 
@@ -48,19 +48,19 @@ namespace LetterDuel.Backend.Controllers
             {
                 return NotFound("Game not found");
             }
-            //skapar ny spelare (player2)
-            var player = new Player { Name = request.PlayerName };
+
             try
             {
                 //lägger till player2 i spelet
-                _gameService.AddPlayer(game, player);
-                return Ok(GameDto.FromGame(game));
+                _gameService.AddPlayer(game, request.PlayerName);
             }
             //om spel tex har 2 spelare redan
             catch (InvalidOperationException ex)
             {
                 return BadRequest(ex.Message);
             }
+
+            return Ok(GameDto.FromGame(game));
         }
 
         //gissning av bokstav

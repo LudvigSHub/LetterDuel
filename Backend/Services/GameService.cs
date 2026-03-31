@@ -141,7 +141,7 @@ namespace LetterDuel.Backend.Services
             }
             //spelaren med högst poäng vinner
             return game.Players
-                .OrderByDescending(player => player.Score)
+                .OrderByDescending(p => p.Score)
                 .FirstOrDefault();
         }
 
