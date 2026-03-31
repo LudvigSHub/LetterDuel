@@ -1,6 +1,7 @@
 ﻿using LetterDuel.Backend.Domain;
 using LetterDuel.Backend.DTOs.Requests;
 using LetterDuel.Backend.DTOs.Responses;
+using LetterDuel.Backend.Repositories;
 using LetterDuel.Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,14 +13,16 @@ namespace LetterDuel.Backend.Controllers
     public class GameController : ControllerBase
     {
         private readonly GameService _gameService;
+        private readonly IGameRepository _gameRepository;
 
         //Temporär lagring av spel i minnet ersätts senare med en databas
-        private static List<Game> _games = new();
+        //private static List<Game> _games = new();
 
         //Dependency injection av GameService som hanterar spelets logik och regler
-        public GameController(GameService gameService)
+        public GameController(GameService gameService, IGameRepository gameRepository)
         {
             _gameService = gameService;
+            _gameRepository = gameRepository;
         }
 
         //Skapa nytt spel
@@ -32,7 +35,7 @@ namespace LetterDuel.Backend.Controllers
                 request.PlayerName
                 );
             //lägger till spel i minnet
-            _games.Add(game);
+            _gameRepository.Save(game);
 
             return Ok(new GameDto
             {
@@ -62,8 +65,8 @@ namespace LetterDuel.Backend.Controllers
         public ActionResult JoinGame(Guid gameId, JoinGameRequest request)
         {
             //hämtar spel från databas
-            var game = _games.FirstOrDefault(g => g.Id == gameId);
-            
+            var game = _gameRepository.GetById(gameId);
+
             if (game == null)
             {
                 return NotFound("Game not found");
@@ -73,6 +76,8 @@ namespace LetterDuel.Backend.Controllers
             {
                 //lägger till player2 i spelet
                 _gameService.AddPlayer(game, request.PlayerName);
+                //sparar uppdaterat spel i db
+                _gameRepository.Save(game);
             }
             //om spel tex har 2 spelare redan
             catch (InvalidOperationException ex)
@@ -108,7 +113,7 @@ namespace LetterDuel.Backend.Controllers
         public ActionResult Guess(Guid gameId, GuessRequest request)
         {
             //hämtar spel
-            var game = _games.FirstOrDefault(g => g.Id == gameId);
+            var game = _gameRepository.GetById(gameId);
 
 
             if (game == null)
@@ -117,6 +122,7 @@ namespace LetterDuel.Backend.Controllers
             try
             {
                 _gameService.GuessLetter(game, request.PlayerId, request.Letter);
+                _gameRepository.Save(game); //sparar game i db
             }
             catch (InvalidOperationException ex)
             {
@@ -151,7 +157,7 @@ namespace LetterDuel.Backend.Controllers
         public ActionResult<GameDto> GetGame(Guid gameId)
         {
             //hämtar spel
-            var game = _games.FirstOrDefault(g => g.Id == gameId);
+            var game = _gameRepository.GetById(gameId);
 
             if (game == null)
                 return NotFound("Game not found");
