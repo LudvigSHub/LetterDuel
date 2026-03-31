@@ -106,6 +106,14 @@ namespace LetterDuel.Backend.Services
                 .ToArray());
         }
 
+        //lista med gissade bokstäver
+        public List<char> GetGuessedLetters(Game game)
+        {
+            return game.GuessedLetters
+                .OrderBy(letter => letter)
+                .ToList();
+        }
+
         //Kollar om alla unika bokstäver i ordet har blivit gissade
         public bool IsWordFullyGuessed(Game game)
         {
