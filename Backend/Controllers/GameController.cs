@@ -60,8 +60,28 @@ namespace LetterDuel.Backend.Controllers
                 return BadRequest(ex.Message);
             }
 
-            return Ok(GameDto.FromGame(game));
-        }
+            return Ok(new GameDto
+            {
+                Id = game.Id,
+                MaskedWord = new string(
+                game.SecretWord.Select(letter =>
+                game.GuessedLetters.Contains(letter) ? letter : '_'
+                ).ToArray()
+                ),
+                Players = game.Players.Select(p => new PlayerDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Score = p.Score
+                }).ToList(),
+                State = game.State.ToString(),
+                CurrentPlayerId = game.Players[game.CurrentPlayerIndex].Id,
+                GuessedLetters = game.GuessedLetters.OrderBy(l => l).ToList(),
+                WinnerId = game.State == GameState.GameFinished
+                ? game.Players.OrderByDescending(p => p.Score).First().Id
+                : null
+                    });
+            }
 
         //gissning av bokstav
         [HttpPost("{gameId}/guess")] 
@@ -83,7 +103,27 @@ namespace LetterDuel.Backend.Controllers
                 return BadRequest(ex.Message);
             }
 
-            return Ok(GameDto.FromGame(game));
+            return Ok(new GameDto
+            {
+                Id = game.Id,
+                MaskedWord = new string(
+                game.SecretWord.Select(letter =>
+                game.GuessedLetters.Contains(letter) ? letter : '_'
+                ).ToArray()
+                ),
+                Players = game.Players.Select(p => new PlayerDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Score = p.Score
+                }).ToList(),
+                State = game.State.ToString(),
+                CurrentPlayerId = game.Players[game.CurrentPlayerIndex].Id,
+                GuessedLetters = game.GuessedLetters.OrderBy(l => l).ToList(),
+                WinnerId = game.State == GameState.GameFinished
+                ? game.Players.OrderByDescending(p => p.Score).First().Id
+                : null
+                });
         }
 
         //hämtar spelstatus
@@ -97,7 +137,27 @@ namespace LetterDuel.Backend.Controllers
                 return NotFound("Game not found");
 
             //returnerar spelet med aktuell status
-            return Ok(GameDto.FromGame(game));
+            return Ok(new GameDto
+            {
+                Id = game.Id,
+                MaskedWord = new string(
+                game.SecretWord.Select(letter =>
+                    game.GuessedLetters.Contains(letter) ? letter : '_'
+                ).ToArray()
+                ),
+                Players = game.Players.Select(p => new PlayerDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Score = p.Score
+                }).ToList(),
+                State = game.State.ToString(),
+                CurrentPlayerId = game.Players[game.CurrentPlayerIndex].Id,
+                GuessedLetters = game.GuessedLetters.OrderBy(l => l).ToList(),
+                WinnerId = game.State == GameState.GameFinished
+                ? game.Players.OrderByDescending(p => p.Score).First().Id
+                : null
+            });
         }   
     }
 }
