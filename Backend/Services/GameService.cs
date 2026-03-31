@@ -8,7 +8,7 @@ namespace LetterDuel.Backend.Services
     public class GameService
     {
         //skapar ett nytt game och ersätter startvärden för spelets state
-        public Game CreateGame(string secretWord, Player creator)
+        public Game CreateGame(string secretWord, string playerName)
         {
             var game = new Game
             {
@@ -21,8 +21,14 @@ namespace LetterDuel.Backend.Services
             };
 
             //player1 skapas med spelet
-            creator.GameId = game.Id;
-            game.Players.Add(creator);
+            var player = new Player
+            {
+                Name = playerName,
+                GameId = game.Id
+            };
+
+            game.Players.Add(player);
+
             return game;
         }
 
