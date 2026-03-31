@@ -33,7 +33,7 @@ namespace LetterDuel.Backend.Services
         }
 
         //Lägger till en spelare i spelet
-        public void AddPlayer(Game game, Player player)
+        public void AddPlayer(Game game, string playerName)
         {
             //spelet får bara innehålla två spelare.
             if (game.Players.Count >= 2)
@@ -41,14 +41,16 @@ namespace LetterDuel.Backend.Services
                 throw new InvalidOperationException("Game already has two players.");
             }
             //kopplar spelaren till aktuella spelet
-            player.GameId = game.Id;
-            //lägger till spelare i listan av deltagare
-            game.Players.Add(player);
-            // när två spelare har gått med startar spelet
-            if (game.Players.Count == 2)
+            var player = new Player
             {
+                Name = playerName,
+                GameId = game.Id
+            };
+
+            game.Players.Add(player);
+
+            if (game.Players.Count == 2)
                 game.State = GameState.InProgress;
-            }
         }
 
         //hanterar en spelares bokstavsgissning
@@ -86,11 +88,11 @@ namespace LetterDuel.Backend.Services
             //om gissning är rätt
             if (game.SecretWord.Contains(letter))
             {
-                var currentplayer = game.Players[game.CurrentPlayerIndex];
-                var letterCount = game.SecretWord.Count(c => c == letter);
-                var pointsPerLetter = IsVowel(letter) ? 2 : 4;
+                var player = game.Players[game.CurrentPlayerIndex];
+                var count = game.SecretWord.Count(c => c == letter);
+                var points = IsVowel(letter) ? 2 : 4;
 
-                currentplayer.Score += letterCount * pointsPerLetter;
+                player.Score += count * points;
             }
 
             //om alla bokstäver är gissade, avsluta Game
@@ -100,7 +102,8 @@ namespace LetterDuel.Backend.Services
                 return;
             }
 
-            game.CurrentPlayerIndex = (game.CurrentPlayerIndex + 1) % game.Players.Count;
+            game.CurrentPlayerIndex = 
+                (game.CurrentPlayerIndex + 1) % game.Players.Count;
         }
 
         //returnerar ordet i maskerad form, där ogissade bokstäver visas som _.
