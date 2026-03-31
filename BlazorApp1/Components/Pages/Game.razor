@@ -1,19 +1,28 @@
 ﻿@page "/game/{GameId}"
 @rendermode InteractiveServer
 @inject IJSRuntime JS
+@inject NavigationManager Nav
 @implements IAsyncDisposable
 
 <PageTitle>LetterDuel - Game</PageTitle>
 
 <div class="container mt-4">
 
+    <!-- 
+        Visar vilket player number du är
+        myPlayerNumber sätts slumpmässigt nu, ska komma från API (playerId matchas mot players-listan)
+    -->
     <div class="text-center mb-3">
         <span class="badge @(myPlayerNumber == 1 ? "bg-primary" : "bg-danger") fs-6">
             You are Player @myPlayerNumber
         </span>
     </div>
 
-    <!-- Poängrad -->
+    <!--
+        Visar poäng och vems tur det är
+         player1Score och player2Score kommer från dummy, ska komma från API via RefreshGameState
+         currentTurn är lokal, ska baseras på currentPlayerId från API(?)
+    -->
     <div class="row text-center mb-4">
         <div class="col">
             <h5>Player 1</h5>
@@ -44,7 +53,11 @@
         </div>
     </div>
 
-    <!-- Ordet -->
+    <!--
+        Visar ordets bokstäver som rutor
+        maskedWord kommer från dummydatan ("APPLE"), ska komma från API
+        
+    -->
     <div class="text-center mb-4">
         <div class="d-flex justify-content-center gap-2 flex-wrap">
             @foreach (var ch in maskedWord)
@@ -57,21 +70,51 @@
         </div>
     </div>
 
-    <!-- Gissade bokstäver -->
+    <!--
+        Visar gissade bokstäver
+                guessedLetters ska komma från API, inte lokal lista
+    -->
     <div class="text-center mb-4">
-        <p><strong>Guessed letters:</strong> @string.Join(", ", guessedLetters)</p>
+        <p><strong>Guessed letters:</strong>
+            @foreach (var letter in guessedLetters)
+            {
+                <!-- 
+                    färgkoda bokstäverna om vi vill
+                    behövs att vi vet om bokstaven var rätt eller fel dvs behöver eget state eller info från API
+                -->
+                <span class="badge @(correctLetters.Contains(letter) ? "bg-success" : "bg-secondary") me-1">
+                    @letter
+                </span>
+            }
+        </p>
     </div>
 
-    <!-- Input — bara när det är din tur -->
+    <!--
+        input visas bara när det är din tur, annars "Waiting..."
+        currentTurn == myPlayerNumber fungerar med dummy,
+              ska jämföra currentPlayerId från API mot din playerId från localStorage
+        
+    -->
     <div class="row justify-content-center mb-3">
         <div class="col-md-3 text-center">
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <!-- visar felmeddelande vid ogiltig gissning -->
+                <div class="alert alert-danger py-1 mb-2">@errorMessage</div>
+            }
+
             @if (currentTurn == myPlayerNumber)
             {
                 <input class="form-control text-center mb-2"
                        maxlength="1"
                        placeholder="A-Z"
                        @bind="currentGuess" />
-                <button class="btn btn-success w-100" @onclick="MakeGuess">
+                <button class="btn btn-success w-100" @onclick="MakeGuess" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <!-- laddning kanske? -->
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
                     Guess!
                 </button>
             }
@@ -82,22 +125,40 @@
         </div>
     </div>
 
+    <!--
+        visa Game ID så spelare 1 kan dela det
+        
+    -->
+    <div class="text-center mt-4">
+        <small class="text-muted">Game ID: <strong>@GameId</strong></small>
+    </div>
+
 </div>
 
 @code {
     [Parameter] public string GameId { get; set; } = "";
 
+    [Parameter, SupplyParameterFromQuery]
+    public int? Player { get; set; }
+
     private string playerToken = "";
     private int myPlayerNumber = 0;
 
-    // Game state - dummy data
+    // dummy data
+    // allt detta ska ersättas med data från API
     private int player1Score = 0;
     private int player2Score = 0;
     private int currentTurn = 1;
     private string secretWord = "APPLE";
     private List<char> maskedWord = new();
     private List<string> guessedLetters = new();
+
+    // håller koll på rätta gissningar för färgkodning
+    private HashSet<string> correctLetters = new();
+
     private string currentGuess = "";
+    private string errorMessage = "";  //felmeddelanden
+    private bool isLoading = false;    // laddningsgrejsimojs
 
     private Timer? _timer;
 
@@ -111,7 +172,9 @@
         if (firstRender)
         {
             playerToken = await JS.InvokeAsync<string>("localStorage.getItem", "playerToken") ?? "";
-            myPlayerNumber = new Random().Next(1, 3); // TODO: ersätt med riktigt API-anrop
+
+            //  ersätt med API-anrop som kollar vilket playernumber din token motsvarar
+            myPlayerNumber = Player ?? 1;
 
             _timer = new Timer(async _ =>
             {
@@ -125,37 +188,55 @@
 
     private async Task RefreshGameState()
     {
-        // TODO: anropa GET /api/games/{GameId}
+        // anropa GET /api/games/{GameId} med playerToken som header
+        // och uppdatera: maskedWord, guessedLetters, player1Score, player2Score, currentTurn
+        // när state == "GameFinished": navigera till resultatsida
         await Task.CompletedTask;
     }
 
     private void MakeGuess()
     {
+        // rensa felmeddelande vid nytt försök
+        errorMessage = "";
+
         if (string.IsNullOrWhiteSpace(currentGuess)) return;
 
         var letter = currentGuess.ToUpper()[0];
 
-        if (!guessedLetters.Contains(letter.ToString()))
+        // validera redan gissad bokstav direkt i UI
+        if (guessedLetters.Contains(letter.ToString()))
         {
-            guessedLetters.Add(letter.ToString());
+            errorMessage = $"{letter} has already been guessed!";
+            currentGuess = "";
+            return;
+        }
 
-            for (int i = 0; i < secretWord.Length; i++)
-            {
-                if (secretWord[i] == letter)
-                    maskedWord[i] = letter;
-            }
+        guessedLetters.Add(letter.ToString());
 
-            bool isCorrect = secretWord.Contains(letter);
-            if (isCorrect)
+        bool isCorrect = false;
+        for (int i = 0; i < secretWord.Length; i++)
+        {
+            if (secretWord[i] == letter)
             {
-                bool isVowel = "AEIOUY".Contains(letter);
-                if (currentTurn == 1) player1Score += isVowel ? 2 : 4;
-                else player2Score += isVowel ? 2 : 4;
+                maskedWord[i] = letter;
+                isCorrect = true;
             }
+        }
+
+        // spara rätt gissningar för färgkodning
+        if (isCorrect)
+        {
+            correctLetters.Add(letter.ToString());
+            bool isVowel = "AEIOUY".Contains(letter);
+            if (currentTurn == 1) player1Score += isVowel ? 2 : 4;
+            else player2Score += isVowel ? 2 : 4;
         }
 
         currentTurn = currentTurn == 1 ? 2 : 1;
         currentGuess = "";
+
+        // när API finns, ersätt hela MakeGuess med ett POST-anrop
+        // och låt RefreshGameState uppdatera state istället :)
     }
 
     public async ValueTask DisposeAsync()
