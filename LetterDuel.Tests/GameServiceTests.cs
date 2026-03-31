@@ -198,5 +198,15 @@ namespace LetterDuel.Tests
 
             Assert.Equal(player2.Id, winner!.Id);
         }
+
+        [Fact]
+        //test att spelet tar emot stor bokstav oavsett
+        public void GuessLetter_Should_Be_Case_Insensitive()
+        {
+            var (game, player1, player2) = CreateStartedGame("APPLE");
+            _service.GuessLetter(game, player1.Id, "a");
+            Assert.Contains('A', game.GuessedLetters);
+            Assert.Equal(2, player1.Score);
+        }
     }
 }
