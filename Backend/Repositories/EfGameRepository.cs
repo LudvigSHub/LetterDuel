@@ -13,51 +13,24 @@ namespace LetterDuel.Backend.Repositories
             _context = context;
         }
 
-        public Game? GetById(Guid id)
+        public async Task<Game?> GetAsync(Guid id)
         {
-            //Include behövs för att Players ska laddas med spelet
-            return _context.Games
+            return await _context.Games
                 .Include(g => g.Players)
-                .FirstOrDefault(g => g.Id == id);
+                .FirstOrDefaultAsync(g => g.Id == id);
         }
 
-        public void Save(Game game)
+        public async Task<Game> AddAsync(Game game)
         {
-            //Om spelet inte redan finns i databasen läggs det till
-            var existingGame = _context.Games
-                .Include(g => g.Players)
-                .FirstOrDefault(g => g.Id == game.Id);
+            _context.Games.Add(game);
+            await _context.SaveChangesAsync();
+            return game;
+        }
 
-            if (existingGame == null)
-            {
-                _context.Games.Add(game);
-            }
-            else
-            {
-                //Uppdatera enkla fält på Game
-                existingGame.SecretWord = game.SecretWord;
-                existingGame.State = game.State;
-                existingGame.GuessedLetters = game.GuessedLetters;
-                existingGame.CurrentPlayerIndex = game.CurrentPlayerIndex;
-
-                //Om nya spelare lagts till, lägg till dem
-                foreach (var player in game.Players)
-                {
-                    if (!existingGame.Players.Any(p => p.Id == player.Id))
-                    {
-                        existingGame.Players.Add(player);
-                    }
-                    else
-                    {
-                        var existingPlayer = existingGame.Players.First(p => p.Id == player.Id);
-                        existingPlayer.Name = player.Name;
-                        existingPlayer.Score = player.Score;
-                        existingPlayer.GameId = player.GameId;
-                    }
-                }
-            }
-
-            _context.SaveChanges();
+        public async Task UpdateAsync(Game game)
+        {
+            _context.Games.Update(game);
+            await _context.SaveChangesAsync();
         }
     }
 }
