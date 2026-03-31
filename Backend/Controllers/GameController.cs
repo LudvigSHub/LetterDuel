@@ -20,37 +20,37 @@ namespace LetterDuel.Backend.Controllers
 
         //Skapa nytt spel
         [HttpPost]
-        public async Task<ActionResult<GameDto>> CreateGame(CreateGameRequest request)
+        public async Task<ActionResult<CreateGameResponse>> CreateGame(CreateGameRequest request)
         {
-            //anropar service för att skapa spelet
-            var game = await _gameService.CreateGame(
-                request.SecretWord, 
-                request.PlayerName
-                );
-            //lägger till spel i minnet
-                return Ok(MapToDto(game));
+            if (string.IsNullOrWhiteSpace(request.PlayerName))
+                return BadRequest("PlayerName is required");
+
+            var response = await _gameService.CreateGame(request.PlayerName);
+
+            return Ok(response);
         }
 
+        
         //gå med i spel (player2)
         [HttpPost("{gameId}/join")]
-        public async Task<ActionResult<GameDto>> JoinGame(Guid gameId, JoinGameRequest request)
+        public async Task<ActionResult<JoinGameResponse>> JoinGame(Guid gameId, JoinGameRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.PlayerName))
+                return BadRequest("PlayerName is required");
 
             try
             {
-                var game = await _gameService.AddPlayer(gameId, request.PlayerName);
+                var response = await _gameService.AddPlayer(gameId, request.PlayerName);
 
-                if (game == null)
+                if (response == null)
                     return NotFound("Game not found");
 
-                return Ok(MapToDto(game));
+                return Ok(response);
             }
-            //om spel tex har 2 spelare redan
             catch (InvalidOperationException ex)
             {
                 return BadRequest(ex.Message);
             }
-
         }
 
         //gissning av bokstav

@@ -1,4 +1,5 @@
 ﻿using LetterDuel.Backend.Domain;
+using LetterDuel.Backend.DTOs.Responses;
 using LetterDuel.Backend.Repositories;
 
 namespace LetterDuel.Backend.Services
@@ -14,11 +15,20 @@ namespace LetterDuel.Backend.Services
         }
 
         // Skapar nytt spel
-        public async Task<Game> CreateGame(string secretWord, string playerName)
+        public async Task<CreateGameResponse> CreateGame(string playerName)
         {
+            var words = await _repo.GetAllWordsAsync();
+
+            if (words == null || !words.Any())
+            {
+                throw new InvalidOperationException("No words available");
+            }
+
+            var randomWord = words[Random.Shared.Next(words.Count)].Word;
+
             var game = new Game
             {
-                SecretWord = secretWord.ToUpperInvariant(),
+                SecretWord = randomWord.ToUpperInvariant(),
                 State = GameState.WaitingForPlayers,
                 CurrentPlayerIndex = 0
             };
@@ -31,11 +41,18 @@ namespace LetterDuel.Backend.Services
 
             game.Players.Add(player);
 
-            return await _repo.AddAsync(game);
+            var savedGame = await _repo.AddAsync(game);
+
+            return new CreateGameResponse
+            {
+                GameId = savedGame.Id,
+                PlayerId = player.Id,
+                PlayerName = player.Name
+            };
         }
 
         // Lägger till spelare
-        public async Task<Game?> AddPlayer(Guid gameId, string playerName)
+            public async Task<JoinGameResponse?> AddPlayer(Guid gameId, string playerName)
         {
             var game = await _repo.GetAsync(gameId);
 
@@ -58,8 +75,14 @@ namespace LetterDuel.Backend.Services
 
             await _repo.UpdateAsync(game);
 
-            return game;
+            return new JoinGameResponse
+            {
+                GameId = game.Id,
+                PlayerId = player.Id,
+                PlayerName = player.Name
+            };
         }
+        
 
         // Hanterar gissning
         public async Task<Game?> GuessLetter(Guid gameId, Guid playerId, string input)
