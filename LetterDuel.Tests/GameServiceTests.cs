@@ -11,7 +11,6 @@ namespace LetterDuel.Tests
         {
             var repo = new FakeGameRepository();
             _service = new GameService(repo);
-
         }
 
         [Fact]
