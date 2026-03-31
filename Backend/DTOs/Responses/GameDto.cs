@@ -41,8 +41,7 @@ namespace LetterDuel.Backend.DTOs.Responses
                 GuessedLetters = game.GuessedLetters
                     .OrderBy(l => l)
                     .ToList(),
-
-               
+ 
                 WinnerId = game.State == GameState.GameFinished
                     ? game.Players
                     .OrderByDescending(p => p.Score)
