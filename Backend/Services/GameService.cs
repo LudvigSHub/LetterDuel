@@ -69,8 +69,12 @@ namespace LetterDuel.Backend.Services
         }
 
         //hanterar en spelares bokstavsgissning
-        public void GuessLetter(Game game, Guid playerId, string input)
+        public async Task<Game?> GuessLetter(Guid gameId, Guid playerId, string input)
         {
+            var game = await _repo.GetAsync(gameId);
+
+            if (game == null)
+                return null;
             //det går bara att gissa när spel är igång
             if (game.State != GameState.InProgress)
             {
@@ -114,11 +118,16 @@ namespace LetterDuel.Backend.Services
             if (IsWordFullyGuessed(game))
             {
                 game.State = GameState.GameFinished;
-                return;
+                await _repo.SaveAsync(game);
+                return game;
             }
 
             game.CurrentPlayerIndex = 
                 (game.CurrentPlayerIndex + 1) % game.Players.Count;
+
+            await _repo.UpdateAsync(game);
+
+            return game;
         }
 
         //returnerar ordet i maskerad form, där ogissade bokstäver visas som _.
