@@ -71,7 +71,7 @@ namespace LetterDuel.Backend.Controllers
 
 
             if (game == null)
-                return NotFound();
+                return NotFound("Game not found");
             //spelservice hanterar gissning av bokstav och uppdaterar spelets state
             try
             {
@@ -87,13 +87,13 @@ namespace LetterDuel.Backend.Controllers
 
         //hämtar spelstatus
         [HttpGet("{gameId}")] 
-        public ActionResult<Game> GetGame(Guid gameId)
+        public ActionResult<GameDto> GetGame(Guid gameId)
         {
             //hämtar spel
             var game = _games.FirstOrDefault(g => g.Id == gameId);
 
             if (game == null)
-                return NotFound();
+                return NotFound("Game not found");
 
             //returnerar spelet med aktuell status
             return Ok(GameDto.FromGame(game));
