@@ -34,7 +34,27 @@ namespace LetterDuel.Backend.Controllers
             //lägger till spel i minnet
             _games.Add(game);
 
-            return Ok(GameDto.FromGame(game));
+            return Ok(new GameDto
+            {
+                Id = game.Id,
+                MaskedWord = new string(
+                game.SecretWord.Select(letter =>
+                    game.GuessedLetters.Contains(letter) ? letter : '_'
+                ).ToArray()
+            ),
+                Players = game.Players.Select(p => new PlayerDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Score = p.Score
+                }).ToList(),
+                State = game.State.ToString(),
+                CurrentPlayerId = game.Players[game.CurrentPlayerIndex].Id,
+                GuessedLetters = game.GuessedLetters.OrderBy(l => l).ToList(),
+                WinnerId = game.State == GameState.GameFinished
+                ? game.Players.OrderByDescending(p => p.Score).First().Id
+                : null
+                    });
         }
 
         //gå med i spel (player2)
