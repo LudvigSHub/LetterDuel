@@ -58,6 +58,8 @@ namespace LetterDuel.Backend.Services
 
             if (game.Players.Count == 2)
                 game.State = GameState.InProgress;
+
+            return game;
         }
 
         //hanterar en spelares bokstavsgissning
@@ -111,6 +113,11 @@ namespace LetterDuel.Backend.Services
 
             game.CurrentPlayerIndex = 
                 (game.CurrentPlayerIndex + 1) % game.Players.Count;
+        }
+
+        public async Task<Game?> GetGame(Guid gameId)
+        {
+            return await _repo.GetByIdAsync(gameId);
         }
 
         //returnerar ordet i maskerad form, där ogissade bokstäver visas som _.
