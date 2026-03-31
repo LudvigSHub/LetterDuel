@@ -4,7 +4,7 @@ using LetterDuel.Backend.Services;
 namespace LetterDuel.Tests
 {
     public class GameServiceTests
-    {
+    { 
         private readonly GameService _service;
 
         public GameServiceTests()
