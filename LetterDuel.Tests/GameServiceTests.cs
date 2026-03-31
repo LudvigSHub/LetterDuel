@@ -60,7 +60,7 @@ namespace LetterDuel.Tests
             var game = _service.CreateGame("APPLE", creator);
             var action = () => _service.GuessLetter(game, creator.Id, "A");
 
-            Assert.Throws<InvalidOperationException> (action);
+            Assert.Throws<InvalidOperationException>(action);
         }
 
         [Fact]
@@ -101,9 +101,9 @@ namespace LetterDuel.Tests
             string input,
             bool shouldExistInWord,
             int expectedScore)
-        { 
-            var (game, player1, player2) = CreateStartedGame(secretWord); 
-            _service.GuessLetter(game,player1.Id, input);
+        {
+            var (game, player1, player2) = CreateStartedGame(secretWord);
+            _service.GuessLetter(game, player1.Id, input);
 
             Assert.Contains(input.ToUpperInvariant()[0], game.GuessedLetters);
             Assert.Equal(shouldExistInWord, game.SecretWord.Contains(input.ToUpperInvariant()[0]));
@@ -159,6 +159,44 @@ namespace LetterDuel.Tests
             _service.AddPlayer(game, player2);
 
             return (game, player1, player2);
+        }
+
+        [Fact]
+        //Om bokstav redan gissats
+        public void If_Letter_Is_Guessed_Already()
+        {
+            var (game, player1, _) = CreateStartedGame();
+
+            _service.GuessLetter(game, player1.Id, "A");
+
+            var action = () => _service.GuessLetter(game, player1.Id, "A");
+
+            Assert.Throws<InvalidOperationException>(action);
+        }
+
+        [Fact]
+        public void Game_Ending_Test()
+        {
+            var (game, player1, player2) = CreateStartedGame("A");
+
+            _service.GuessLetter(game, player1.Id, "A");
+
+            Assert.Equal(GameState.GameFinished, game.State);
+        }
+
+        [Fact]
+        public void GetWinner_Test()
+        {
+            var (game, player1, player2) = CreateStartedGame("AB");
+
+            _service.GuessLetter(game, player1.Id, "A");
+            _service.GuessLetter(game, player2.Id, "B");
+
+            game.State = GameState.GameFinished;
+
+            var winner = _service.GetWinner(game);
+
+            Assert.Equal(player2.Id, winner!.Id);
         }
     }
 }
