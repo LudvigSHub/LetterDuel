@@ -7,8 +7,15 @@ namespace LetterDuel.Backend.Services
     // här hanteras skapande av spel, spelare, bokstavsgissningar, poäng och vinnare
     public class GameService
     {
+
+        private readonly IGameRepository _repo;
+
+        public GameService(IGameRepository repo)
+        {
+            _repo = repo;
+        }
         //skapar ett nytt game och ersätter startvärden för spelets state
-        public Game CreateGame(string secretWord, string playerName)
+        public async Task<Game> CreateGame(string secretWord, string playerName)
         {
             var game = new Game
             {
@@ -29,12 +36,16 @@ namespace LetterDuel.Backend.Services
 
             game.Players.Add(player);
 
-            return game;
+            return await _repo.AddAsync(game);
         }
 
         //Lägger till en spelare i spelet
-        public void AddPlayer(Game game, string playerName)
+        public async Task<Game> AddPlayer(Guid gameId, string playerName)
         {
+            var game = await _repo.GetAsync(gameId);
+
+            if (game == null)
+                return null;
             //spelet får bara innehålla två spelare.
             if (game.Players.Count >= 2)
             {
@@ -51,6 +62,10 @@ namespace LetterDuel.Backend.Services
 
             if (game.Players.Count == 2)
                 game.State = GameState.InProgress;
+
+            await _repo.UpdateAsync(game);
+
+            return game;
         }
 
         //hanterar en spelares bokstavsgissning
