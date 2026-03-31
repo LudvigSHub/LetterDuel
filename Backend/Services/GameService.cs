@@ -7,15 +7,8 @@ namespace LetterDuel.Backend.Services
     // här hanteras skapande av spel, spelare, bokstavsgissningar, poäng och vinnare
     public class GameService
     {
-
-        private readonly IGameRepository _repo;
-
-        public GameService(IGameRepository repo)
-        {
-            _repo = repo;
-        }
         //skapar ett nytt game och ersätter startvärden för spelets state
-        public async Task<Game> CreateGame(string secretWord, string playerName)
+        public Game CreateGame(string secretWord, string playerName)
         {
             var game = new Game
             {
@@ -36,16 +29,12 @@ namespace LetterDuel.Backend.Services
 
             game.Players.Add(player);
 
-            return await _repo.AddAsync(game);
+            return game;
         }
 
         //Lägger till en spelare i spelet
-        public async Task<Game?> AddPlayer(Guid gameId, string playerName)
+        public void AddPlayer(Game game, string playerName)
         {
-            var game = await _repo.GetAsync(gameId);
-
-            if (game == null)
-                return null;
             //spelet får bara innehålla två spelare.
             if (game.Players.Count >= 2)
             {
@@ -62,19 +51,11 @@ namespace LetterDuel.Backend.Services
 
             if (game.Players.Count == 2)
                 game.State = GameState.InProgress;
-
-            await _repo.UpdateAsync(game);
-
-            return game;
         }
 
         //hanterar en spelares bokstavsgissning
-        public async Task<Game?> GuessLetter(Guid gameId, Guid playerId, string input)
+        public void GuessLetter(Game game, Guid playerId, string input)
         {
-            var game = await _repo.GetAsync(gameId);
-
-            if (game == null)
-                return null;
             //det går bara att gissa när spel är igång
             if (game.State != GameState.InProgress)
             {
@@ -118,22 +99,11 @@ namespace LetterDuel.Backend.Services
             if (IsWordFullyGuessed(game))
             {
                 game.State = GameState.GameFinished;
-                await _repo.UpdateAsync(game);
-                return game;
+                return;
             }
 
             game.CurrentPlayerIndex = 
                 (game.CurrentPlayerIndex + 1) % game.Players.Count;
-
-            await _repo.UpdateAsync(game);
-
-            return game;
-        }
-
-        // Get game
-        public async Task<Game?> GetGame(Guid gameId)
-        {
-            return await _repo.GetAsync(gameId);
         }
 
         //returnerar ordet i maskerad form, där ogissade bokstäver visas som _.
