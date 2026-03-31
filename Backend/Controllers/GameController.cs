@@ -33,7 +33,7 @@ namespace LetterDuel.Backend.Controllers
             //lägger till spel i minnet
             _games.Add(game);
 
-            return Ok(game);
+            return Ok(GameDto.FromGame(game));
         }
 
         //gå med i spel (player2)
@@ -53,7 +53,7 @@ namespace LetterDuel.Backend.Controllers
             {
                 //lägger till player2 i spelet
                 _gameService.AddPlayer(game, player);
-                return Ok(game);
+                return Ok(GameDto.FromGame(game));
             }
             //om spel tex har 2 spelare redan
             catch (InvalidOperationException ex)
@@ -75,7 +75,7 @@ namespace LetterDuel.Backend.Controllers
             //spelservice hanterar gissning av bokstav och uppdaterar spelets state
             _gameService.GuessLetter(game, request.PlayerId, request.Letter);
 
-            return Ok(game);
+            return Ok(GameDto.FromGame(game));
         }
 
         //hämtar spelstatus
@@ -89,7 +89,7 @@ namespace LetterDuel.Backend.Controllers
                 return NotFound();
 
             //returnerar spelet med aktuell status
-            return Ok(game);
+            return Ok(GameDto.FromGame(game));
         }   
     }
 }
