@@ -1,4 +1,4 @@
-﻿namespace LetterDuel.Backend.DTOs
+﻿namespace LetterDuel.Backend.DTOs.Responses
 {
     public class PlayerDto
     {

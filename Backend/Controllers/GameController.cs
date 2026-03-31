@@ -1,6 +1,7 @@
 ﻿using LetterDuel.Backend.Domain;
+using LetterDuel.Backend.DTOs.Requests;
+using LetterDuel.Backend.DTOs.Responses;
 using LetterDuel.Backend.Services;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 
 

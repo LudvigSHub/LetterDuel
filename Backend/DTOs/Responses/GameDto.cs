@@ -1,13 +1,13 @@
 ﻿using LetterDuel.Backend.Domain;
 
-namespace LetterDuel.Backend.DTOs
+namespace LetterDuel.Backend.DTOs.Responses
 {
     public class GameDto
     {
         public Guid Id { get; set; }
         public string MaskedWord { get; set; } = string.Empty;
         public List<PlayerDto> Players { get; set; } = new();
-        public string State { get; set; }
+        public string State { get; set; } = "";
         public Guid CurrentPlayerId { get; set; }
 
         public static GameDto FromGame(Game game)
@@ -16,9 +16,10 @@ namespace LetterDuel.Backend.DTOs
             {
                 Id = game.Id,
                 MaskedWord = new string(
-                    game.SecretWord.Select(1 =>
-                    game.GuessedLetters.Contains(1) ? 1 : '_').ToArray()
-                    ),
+                    game.SecretWord.Select(letter =>
+                        game.GuessedLetters.Contains(letter) ? letter : '_'
+                    ).ToArray()
+                ),
                 Players = game.Players.Select(p => new PlayerDto
                 {
                     Id = p.Id,
