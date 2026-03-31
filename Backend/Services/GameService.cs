@@ -40,7 +40,7 @@ namespace LetterDuel.Backend.Services
         }
 
         //Lägger till en spelare i spelet
-        public async Task<Game> AddPlayer(Guid gameId, string playerName)
+        public async Task<Game?> AddPlayer(Guid gameId, string playerName)
         {
             var game = await _repo.GetAsync(gameId);
 
@@ -118,7 +118,7 @@ namespace LetterDuel.Backend.Services
             if (IsWordFullyGuessed(game))
             {
                 game.State = GameState.GameFinished;
-                await _repo.SaveAsync(game);
+                await _repo.UpdateAsync(game);
                 return game;
             }
 
@@ -128,6 +128,12 @@ namespace LetterDuel.Backend.Services
             await _repo.UpdateAsync(game);
 
             return game;
+        }
+
+        // Get game
+        public async Task<Game?> GetGame(Guid gameId)
+        {
+            return await _repo.GetAsync(gameId);
         }
 
         //returnerar ordet i maskerad form, där ogissade bokstäver visas som _.
