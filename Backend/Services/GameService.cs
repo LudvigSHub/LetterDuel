@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.Design;
 using LetterDuel.Backend.Domain;
+using LetterDuel.Backend.Repositories;
 
 namespace LetterDuel.Backend.Services
 {
@@ -7,7 +8,6 @@ namespace LetterDuel.Backend.Services
     // här hanteras skapande av spel, spelare, bokstavsgissningar, poäng och vinnare
     public class GameService
     {
-
         private readonly IGameRepository _repo;
 
         public GameService(IGameRepository repo)
