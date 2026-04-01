@@ -67,13 +67,14 @@ namespace LetterDuel.Backend.Services
                 Name = playerName,
                 GameId = game.Id
             };
+            await _repo.AddPlayerAsync(player);
 
-            game.Players.Add(player);
+
 
             if (game.Players.Count == 2)
                 game.State = GameState.InProgress;
 
-            await _repo.UpdateAsync(game);
+            await _repo.SaveChangesAsync();
 
             return new JoinGameResponse
             {
@@ -169,9 +170,16 @@ namespace LetterDuel.Backend.Services
             if (game.State != GameState.GameFinished)
                 return null;
 
-            return game.Players
-                .OrderByDescending(p => p.Score)
-                .FirstOrDefault();
+            var maxScore = game.Players.Max(p => p.Score);
+
+            var topPlayers = game.Players
+                .Where(p => p.Score == maxScore)
+                .ToList();
+
+            if (topPlayers.Count > 1)
+                return null; //draw
+
+            return topPlayers.First();
         }
 
         // Hjälpmetoder
