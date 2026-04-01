@@ -40,7 +40,7 @@
                     <strong>@joinLink</strong>
                 </div>
                 <button class="btn btn-outline-secondary btn-sm mb-3" @onclick="CopyLink">
-                    📋 Copy Link
+                    📋 Copy Game ID
                 </button>
                 <br />
                 <button class="btn btn-primary w-100" @onclick="GoToGame">
@@ -66,14 +66,14 @@
 
     private record CreateGameResponse(Guid GameId, Guid PlayerId, string PlayerName);
     private record JoinGameResponse(Guid GameId, Guid PlayerId, string PlayerName);
-   
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             var uri = Nav.ToAbsoluteUri(Nav.Uri);
             var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
-        
+
             if (query.TryGetValue("join", out var joinParam) && !string.IsNullOrEmpty(joinParam))
             {
                 await JoinAndNavigate(joinParam!);
@@ -111,7 +111,7 @@
             await JS.InvokeVoidAsync("localStorage.setItem", "playerId", result.PlayerId.ToString());
 
             createdGameId = result.GameId.ToString();
-            joinLink = $"{Nav.BaseUri}?join={createdGameId}";
+            joinLink = createdGameId;
         }
         catch (Exception ex)
         {
