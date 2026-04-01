@@ -184,7 +184,7 @@
     {
         try
         {
-            // GET /api/game/{GameId} — hämtar aktuell spelstate från API
+            // GET /api/games/{GameId} — hämtar aktuell spelstate från API
             var game = await Http.GetFromJsonAsync<GameDto>($"api/games/{GameId}");
             if (game == null) return;
 
@@ -208,9 +208,13 @@
             player2Score = game.Players.ElementAtOrDefault(1)?.Score ?? 0;
 
             // Bestäm myPlayerNumber genom att matcha myPlayerId mot players-listan
-            var me = game.Players.FirstOrDefault(p => p.Id == myPlayerId);
-            if (me != null)
-                myPlayerNumber = game.Players.IndexOf(me) + 1;
+            // Sätts bara en gång — annars kan den flippas vid varje poll
+            if (myPlayerNumber == 0)
+            {
+                var me = game.Players.FirstOrDefault(p => p.Id == myPlayerId);
+                if (me != null)
+                    myPlayerNumber = game.Players.IndexOf(me) + 1;
+            }
 
             // Bestäm vems tur det är baserat på currentPlayerId från API
             if (game.CurrentPlayerId == game.Players.ElementAtOrDefault(0)?.Id)
@@ -226,7 +230,7 @@
         }
         catch
         {
-            // polling försöker igen om 800ms
+            // Tyst fel — polling försöker igen om 800ms
         }
     }
 
