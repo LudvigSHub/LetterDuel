@@ -69,8 +69,8 @@
     {
         try
         {
-            var response = await Http.PostAsJsonAsync("api/game",
-                new { PlayerName = "Player1" });
+            var response = await Http.PostAsJsonAsync("api/games",
+            new { PlayerName = "Player1" });
 
             if (!response.IsSuccessStatusCode) return;
 
@@ -100,8 +100,8 @@
     {
         try
         {
-            var response = await Http.PostAsJsonAsync($"api/game/{gameId}/join",
-                new { PlayerName = "Player2" });
+            var response = await Http.PostAsJsonAsync($"api/games/{gameId}/join",
+    new { PlayerName = "Player2" });
 
             if (!response.IsSuccessStatusCode) return;
 

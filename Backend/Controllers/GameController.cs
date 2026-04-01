@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LetterDuel.Backend.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/[games]")]
     public class GameController : ControllerBase
     {
         private readonly GameService _gameService;
