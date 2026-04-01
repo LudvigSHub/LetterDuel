@@ -67,13 +67,14 @@ namespace LetterDuel.Backend.Services
                 Name = playerName,
                 GameId = game.Id
             };
+            await _repo.AddPlayerAsync(player);
 
-            game.Players.Add(player);
+
 
             if (game.Players.Count == 2)
                 game.State = GameState.InProgress;
 
-            await _repo.UpdateAsync(game);
+            await _repo.SaveChangesAsync();
 
             return new JoinGameResponse
             {

@@ -12,5 +12,8 @@ namespace LetterDuel.Backend.Repositories
         Task UpdateAsync(Game game);
 
         Task<List<GameWord>> GetAllWordsAsync();
+
+        Task AddPlayerAsync(Player player);
+        Task SaveChangesAsync();
     }
 }

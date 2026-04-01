@@ -30,6 +30,26 @@ namespace LetterDuel.Backend.Repositories
         public async Task UpdateAsync(Game game)
         {
             _context.Games.Update(game);
+
+            // 🔥 viktigt
+            foreach (var player in game.Players)
+            {
+                if (_context.Entry(player).State == EntityState.Detached)
+                {
+                    _context.Players.Add(player);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddPlayerAsync(Player player)
+        {
+            await _context.Players.AddAsync(player);
+        }
+
+        public async Task SaveChangesAsync()
+        {
             await _context.SaveChangesAsync();
         }
 
