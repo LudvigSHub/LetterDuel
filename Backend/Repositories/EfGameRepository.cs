@@ -32,5 +32,10 @@ namespace LetterDuel.Backend.Repositories
             _context.Games.Update(game);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<GameWord>> GetAllWordsAsync()
+        {
+            return await _context.GameWords.ToListAsync();
+        }
     }
 }

@@ -1,25 +1,33 @@
 ﻿using LetterDuel.Backend.Domain;
 using LetterDuel.Backend.Repositories;
 
-public class FakeGameRepository : IGameRepository
+namespace LetterDuel.Tests
 {
-    private readonly Dictionary<Guid, Game> _games = new();
-
-    public Task<Game?> GetAsync(Guid id)
+    public class FakeGameRepository : IGameRepository
     {
-        _games.TryGetValue(id, out var game);
-        return Task.FromResult(game);
-    }
+        private readonly List<Game> _games = new();
 
-    public Task<Game> AddAsync(Game game)
-    {
-        _games[game.Id] = game;
-        return Task.FromResult(game);
-    }
+        public List<GameWord> Words { get; } = new();
 
-    public Task UpdateAsync(Game game)
-    {
-        _games[game.Id] = game;
-        return Task.CompletedTask;
+        public Task<Game?> GetAsync(Guid id)
+        {
+            return Task.FromResult(_games.FirstOrDefault(g => g.Id == id));
+        }
+
+        public Task<Game> AddAsync(Game game)
+        {
+            _games.Add(game);
+            return Task.FromResult(game);
+        }
+
+        public Task UpdateAsync(Game game)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<List<GameWord>> GetAllWordsAsync()
+        {
+            return Task.FromResult(Words.ToList());
+        }
     }
 }

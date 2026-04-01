@@ -10,5 +10,7 @@ namespace LetterDuel.Backend.Repositories
         Task<Game> AddAsync(Game game);
         //spara new game eller updatera ett befintligt game
         Task UpdateAsync(Game game);
+
+        Task<List<GameWord>> GetAllWordsAsync();
     }
 }
