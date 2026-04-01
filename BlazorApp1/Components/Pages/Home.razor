@@ -47,95 +47,87 @@
 </div>
 
 @code {
-    @code {
-        [Parameter, SupplyParameterFromQuery]
-        public string? Join { get; set; }
+    [Parameter, SupplyParameterFromQuery]
+    public string? Join { get; set; }
 
-        private string joinGameId = "";
-        private string createdGameId = "";
-        private string joinLink = "";
+    private string joinGameId = "";
+    private string createdGameId = "";
+    private string joinLink = "";
 
-        // Records som matchar API-svaren
-        private record CreateGameResponse(Guid GameId, Guid PlayerId, string PlayerName);
-        private record JoinGameResponse(Guid GameId, Guid PlayerId, string PlayerName);
+    private record CreateGameResponse(Guid GameId, Guid PlayerId, string PlayerName);
+    private record JoinGameResponse(Guid GameId, Guid PlayerId, string PlayerName);
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrEmpty(Join))
         {
-            // Om ?join=XXX finns i URL:en, joina automatiskt
-            if (firstRender && !string.IsNullOrEmpty(Join))
-            {
-                await JoinAndNavigate(Join);
-            }
+            await JoinAndNavigate(Join);
         }
+    }
 
-        private async Task CreateGame()
+    private async Task CreateGame()
+    {
+        try
         {
-            try
-            {
-                // POST /api/game — skapa nytt spel
-                var response = await Http.PostAsJsonAsync("api/game",
-                    new { PlayerName = "Player1" });
+            var response = await Http.PostAsJsonAsync("api/game",
+                new { PlayerName = "Player1" });
 
-                if (!response.IsSuccessStatusCode) return;
+            if (!response.IsSuccessStatusCode) return;
 
-                var result = await response.Content
-                    .ReadFromJsonAsync<CreateGameResponse>();
+            var result = await response.Content
+                .ReadFromJsonAsync<CreateGameResponse>();
 
-                if (result == null) return;
+            if (result == null) return;
 
-                // Spara gameId och playerId i localStorage så Game.razor kan använda dem
-                await JS.InvokeVoidAsync("localStorage.setItem", "gameId", result.GameId.ToString());
-                await JS.InvokeVoidAsync("localStorage.setItem", "playerId", result.PlayerId.ToString());
+            await JS.InvokeVoidAsync("localStorage.setItem", "gameId", result.GameId.ToString());
+            await JS.InvokeVoidAsync("localStorage.setItem", "playerId", result.PlayerId.ToString());
 
-                createdGameId = result.GameId.ToString();
-                joinLink = $"{Nav.BaseUri}?join={createdGameId}";
-            }
-            catch
-            {
-                // TODO: visa felmeddelande om API inte svarar
-            }
+            createdGameId = result.GameId.ToString();
+            joinLink = $"{Nav.BaseUri}?join={createdGameId}";
         }
-
-        private async Task JoinGame()
+        catch
         {
-            await JoinAndNavigate(joinGameId);
+            // TODO: visa felmeddelande om API inte svarar
         }
+    }
 
-        private async Task JoinAndNavigate(string gameId)
+    private async Task JoinGame()
+    {
+        await JoinAndNavigate(joinGameId);
+    }
+
+    private async Task JoinAndNavigate(string gameId)
+    {
+        try
         {
-            try
-            {
-                // POST /api/game/{gameId}/join — spelare 2 ansluter
-                var response = await Http.PostAsJsonAsync($"api/game/{gameId}/join",
-                    new { PlayerName = "Player2" });
+            var response = await Http.PostAsJsonAsync($"api/game/{gameId}/join",
+                new { PlayerName = "Player2" });
 
-                if (!response.IsSuccessStatusCode) return;
+            if (!response.IsSuccessStatusCode) return;
 
-                var result = await response.Content
-                    .ReadFromJsonAsync<JoinGameResponse>();
+            var result = await response.Content
+                .ReadFromJsonAsync<JoinGameResponse>();
 
-                if (result == null) return;
+            if (result == null) return;
 
-                // Spara gameId och playerId i localStorage
-                await JS.InvokeVoidAsync("localStorage.setItem", "gameId", result.GameId.ToString());
-                await JS.InvokeVoidAsync("localStorage.setItem", "playerId", result.PlayerId.ToString());
+            await JS.InvokeVoidAsync("localStorage.setItem", "gameId", result.GameId.ToString());
+            await JS.InvokeVoidAsync("localStorage.setItem", "playerId", result.PlayerId.ToString());
 
-                Nav.NavigateTo($"/game/{gameId}");
-            }
-            catch
-            {
-                // TODO: visa felmeddelande om API inte svarar
-            }
+            Nav.NavigateTo($"/game/{gameId}");
         }
-
-        private void GoToGame()
+        catch
         {
-            Nav.NavigateTo($"/game/{createdGameId}");
+            // TODO: visa felmeddelande om API inte svarar
         }
+    }
 
-        private async Task CopyLink()
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", joinLink);
-        }
+    private void GoToGame()
+    {
+        Nav.NavigateTo($"/game/{createdGameId}");
+    }
+
+    private async Task CopyLink()
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", joinLink);
     }
 }
