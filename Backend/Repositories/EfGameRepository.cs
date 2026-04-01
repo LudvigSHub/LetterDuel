@@ -16,7 +16,7 @@ namespace LetterDuel.Backend.Repositories
         public async Task<Game?> GetAsync(Guid id)
         {
             return await _context.Games
-                .Include(g => g.Players)
+                .Include(g => g.Players.OrderBy(p => p.PlayerNumber))
                 .FirstOrDefaultAsync(g => g.Id == id);
         }
 
