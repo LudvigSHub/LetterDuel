@@ -2,15 +2,16 @@
 @rendermode InteractiveServer
 @inject IJSRuntime JS
 @inject NavigationManager Nav
+@inject HttpClient Http
 @implements IAsyncDisposable
 
 <PageTitle>LetterDuel - Game</PageTitle>
 
 <div class="container mt-4">
 
-    <!-- 
+    <!--
         Visar vilket player number du är
-        myPlayerNumber sätts slumpmässigt nu, ska komma från API (playerId matchas mot players-listan)
+        (?)myPlayerNumber bestäms nu genom att matcha playerToken mot players-listan från API
     -->
     <div class="text-center mb-3">
         <span class="badge @(myPlayerNumber == 1 ? "bg-primary" : "bg-danger") fs-6">
@@ -20,8 +21,8 @@
 
     <!--
         Visar poäng och vems tur det är
-         player1Score och player2Score kommer från dummy, ska komma från API via RefreshGameState
-         currentTurn är lokal, ska baseras på currentPlayerId från API(?)
+        player1Score och player2Score kommer nu från API via RefreshGameState
+        currentTurn baseras på currentPlayerId från API, matchat mot myPlayerId
     -->
     <div class="row text-center mb-4">
         <div class="col">
@@ -55,8 +56,7 @@
 
     <!--
         Visar ordets bokstäver som rutor
-        maskedWord kommer från dummydatan ("APPLE"), ska komma från API
-        
+        maskedWord kommer nu från API via RefreshGameState
     -->
     <div class="text-center mb-4">
         <div class="d-flex justify-content-center gap-2 flex-wrap">
@@ -72,16 +72,15 @@
 
     <!--
         Visar gissade bokstäver
-                guessedLetters ska komma från API, inte lokal lista
+        guessedLetters kommer nu från API via RefreshGameState
+        färgkodning: rätta gissningar är gröna, felaktiga är grå
+        correctLetters byggs upp lokalt baserat på om bokstaven finns i maskedWord
     -->
     <div class="text-center mb-4">
-        <p><strong>Guessed letters:</strong>
+        <p>
+            <strong>Guessed letters:</strong>
             @foreach (var letter in guessedLetters)
             {
-                <!-- 
-                    färgkoda bokstäverna om vi vill
-                    behövs att vi vet om bokstaven var rätt eller fel dvs behöver eget state eller info från API
-                -->
                 <span class="badge @(correctLetters.Contains(letter) ? "bg-success" : "bg-secondary") me-1">
                     @letter
                 </span>
@@ -90,10 +89,8 @@
     </div>
 
     <!--
-        input visas bara när det är din tur, annars "Waiting..."
-        currentTurn == myPlayerNumber fungerar med dummy,
-              ska jämföra currentPlayerId från API mot din playerId från localStorage
-        
+        Input visas bara när det är din tur, annars "Waiting..."
+        currentTurn jämförs nu mot myPlayerId från localStorage via currentPlayerId från API
     -->
     <div class="row justify-content-center mb-3">
         <div class="col-md-3 text-center">
@@ -112,7 +109,7 @@
                 <button class="btn btn-success w-100" @onclick="MakeGuess" disabled="@isLoading">
                     @if (isLoading)
                     {
-                        <!-- laddning kanske? -->
+                        <!-- spinner medan gissning skickas till API -->
                         <span class="spinner-border spinner-border-sm me-1"></span>
                     }
                     Guess!
@@ -126,8 +123,7 @@
     </div>
 
     <!--
-        visa Game ID så spelare 1 kan dela det
-        
+        Game ID visas så spelare 1 enkelt kan dela det
     -->
     <div class="text-center mt-4">
         <small class="text-muted">Game ID: <strong>@GameId</strong></small>
@@ -142,14 +138,13 @@
     public int? Player { get; set; }
 
     private string playerToken = "";
+    private Guid myPlayerId;
     private int myPlayerNumber = 0;
 
-    // dummy data
-    // allt detta ska ersättas med data från API
+    // State från API, ersätter det vi hade som dummydata
     private int player1Score = 0;
     private int player2Score = 0;
     private int currentTurn = 1;
-    private string secretWord = "APPLE";
     private List<char> maskedWord = new();
     private List<string> guessedLetters = new();
 
@@ -157,30 +152,29 @@
     private HashSet<string> correctLetters = new();
 
     private string currentGuess = "";
-    private string errorMessage = "";  //felmeddelanden
+    private string errorMessage = "";  // felmeddelanden
     private bool isLoading = false;    // laddningsgrejsimojs
 
     private Timer? _timer;
-
-    protected override void OnInitialized()
-    {
-        maskedWord = secretWord.Select(_ => '_').ToList();
-    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            // Hämta playerToken och playerId från localStorage
             playerToken = await JS.InvokeAsync<string>("localStorage.getItem", "playerToken") ?? "";
+            var playerIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "playerId") ?? "";
+            Guid.TryParse(playerIdStr, out myPlayerId);
 
-            //  ersätt med API-anrop som kollar vilket playernumber din token motsvarar
-            myPlayerNumber = Player ?? 1;
+            // Hämta initial state från API direkt vid inladdning
+            await RefreshGameState();
 
+            // Starta polling var 800ms — samma intervall som every_second_letter
             _timer = new Timer(async _ =>
             {
                 await RefreshGameState();
                 await InvokeAsync(StateHasChanged);
-            }, null, 0, 800);
+            }, null, 800, 800);
 
             StateHasChanged();
         }
@@ -188,22 +182,64 @@
 
     private async Task RefreshGameState()
     {
-        // anropa GET /api/games/{GameId} med playerToken som header
-        // och uppdatera: maskedWord, guessedLetters, player1Score, player2Score, currentTurn
-        // när state == "GameFinished": navigera till resultatsida
-        await Task.CompletedTask;
+        try
+        {
+            // GET /api/game/{GameId} — hämtar aktuell spelstate från API
+            var game = await Http.GetFromJsonAsync<GameDto>($"api/game/{GameId}");
+            if (game == null) return;
+
+            // Uppdatera maskedWord från API
+            maskedWord = game.MaskedWord.ToList();
+
+            // Uppdatera gissade bokstäver från API
+            var newGuessedLetters = game.GuessedLetters.Select(c => c.ToString()).ToList();
+
+            // Bygg upp correctLetters baserat på vad som syns i maskedWord
+            foreach (var letter in newGuessedLetters)
+            {
+                if (game.MaskedWord.Contains(letter[0]))
+                    correctLetters.Add(letter);
+            }
+
+            guessedLetters = newGuessedLetters;
+
+            // Poäng från API
+            player1Score = game.Players.ElementAtOrDefault(0)?.Score ?? 0;
+            player2Score = game.Players.ElementAtOrDefault(1)?.Score ?? 0;
+
+            // Bestäm myPlayerNumber genom att matcha myPlayerId mot players-listan
+            var me = game.Players.FirstOrDefault(p => p.Id == myPlayerId);
+            if (me != null)
+                myPlayerNumber = game.Players.IndexOf(me) + 1;
+
+            // Bestäm vems tur det är baserat på currentPlayerId från API
+            if (game.CurrentPlayerId == game.Players.ElementAtOrDefault(0)?.Id)
+                currentTurn = 1;
+            else
+                currentTurn = 2;
+
+            // Navigera till resultatsida när spelet är slut
+            if (game.State == "GameFinished")
+            {
+                await InvokeAsync(() => Nav.NavigateTo($"/game/{GameId}/result"));
+            }
+        }
+        catch
+        {
+            // polling försöker igen om 800ms
+        }
     }
 
-    private void MakeGuess()
+    private async Task MakeGuess()
     {
-        // rensa felmeddelande vid nytt försök
+        // Rensa felmeddelande vid nytt försök
         errorMessage = "";
 
         if (string.IsNullOrWhiteSpace(currentGuess)) return;
 
         var letter = currentGuess.ToUpper()[0];
 
-        // validera redan gissad bokstav direkt i UI
+        // Validera redan gissad bokstav direkt i UI innan API-anrop
         if (guessedLetters.Contains(letter.ToString()))
         {
             errorMessage = $"{letter} has already been guessed!";
@@ -211,36 +247,55 @@
             return;
         }
 
-        guessedLetters.Add(letter.ToString());
+        isLoading = true;
 
-        bool isCorrect = false;
-        for (int i = 0; i < secretWord.Length; i++)
+        try
         {
-            if (secretWord[i] == letter)
+            // POST /api/game/{GameId}/guess — skickar gissning till API
+            var response = await Http.PostAsJsonAsync($"api/game/{GameId}/guess", new
             {
-                maskedWord[i] = letter;
-                isCorrect = true;
+                PlayerId = myPlayerId,
+                Letter = letter.ToString()
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Visa felmeddelande från API t.ex. "It is not this players turn"
+                errorMessage = await response.Content.ReadAsStringAsync();
             }
-        }
 
-        // spara rätt gissningar för färgkodning
-        if (isCorrect)
+            // RefreshGameState via polling uppdaterar UI automatiskt
+        }
+        catch
         {
-            correctLetters.Add(letter.ToString());
-            bool isVowel = "AEIOUY".Contains(letter);
-            if (currentTurn == 1) player1Score += isVowel ? 2 : 4;
-            else player2Score += isVowel ? 2 : 4;
+            errorMessage = "Something went wrong. Try again.";
         }
+        finally
+        {
+            isLoading = false;
+            currentGuess = "";
+        }
+    }
 
-        currentTurn = currentTurn == 1 ? 2 : 1;
-        currentGuess = "";
+    // DTOs som matchar vad API returnerar
+    private record GameDto(
+        Guid Id,
+        string State,
+        string MaskedWord,
+        List<char> GuessedLetters,
+        Guid? CurrentPlayerId,
+        List<PlayerDto> Players,
+        Guid? WinnerId
+    );
 
-        // när API finns, ersätt hela MakeGuess med ett POST-anrop
-        // och låt RefreshGameState uppdatera state istället :)
+    private record PlayerDto(Guid Id, string Name, int Score)
+    {
+        // Behövs för IndexOf att fungera korrekt
     }
 
     public async ValueTask DisposeAsync()
     {
+        // Stoppa polling när komponenten stängs
         if (_timer != null)
             await _timer.DisposeAsync();
     }

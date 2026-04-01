@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @inject NavigationManager Nav
 @inject IJSRuntime JS
+@inject HttpClient Http
 
 <PageTitle>LetterDuel</PageTitle>
 
@@ -46,55 +47,95 @@
 </div>
 
 @code {
-    [Parameter, SupplyParameterFromQuery]
-    public string? Join { get; set; }
+    @code {
+        [Parameter, SupplyParameterFromQuery]
+        public string? Join { get; set; }
 
-    private string joinGameId = "";
-    private string createdGameId = "";
-    private string joinLink = "";
+        private string joinGameId = "";
+        private string createdGameId = "";
+        private string joinLink = "";
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && !string.IsNullOrEmpty(Join))
+        // Records som matchar API-svaren
+        private record CreateGameResponse(Guid GameId, Guid PlayerId, string PlayerName);
+        private record JoinGameResponse(Guid GameId, Guid PlayerId, string PlayerName);
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            await JoinAndNavigate(Join);
+            // Om ?join=XXX finns i URL:en, joina automatiskt
+            if (firstRender && !string.IsNullOrEmpty(Join))
+            {
+                await JoinAndNavigate(Join);
+            }
         }
-    }
 
-    private async Task CreateGame()
-    {
-        var gameId = "123"; // dummy
-        var playerToken = Guid.NewGuid().ToString(); // dummy
+        private async Task CreateGame()
+        {
+            try
+            {
+                // POST /api/game — skapa nytt spel
+                var response = await Http.PostAsJsonAsync("api/game",
+                    new { PlayerName = "Player1" });
 
-        await JS.InvokeVoidAsync("localStorage.setItem", "playerToken", playerToken);
-        await JS.InvokeVoidAsync("localStorage.setItem", "gameId", gameId);
+                if (!response.IsSuccessStatusCode) return;
 
-        createdGameId = gameId;
-        joinLink = $"{Nav.BaseUri}?join={gameId}";
-    }
+                var result = await response.Content
+                    .ReadFromJsonAsync<CreateGameResponse>();
 
-    private async Task JoinGame()
-    {
-        await JoinAndNavigate(joinGameId);
-    }
+                if (result == null) return;
 
-    private async Task JoinAndNavigate(string gameId)
-    {
-        var playerToken = Guid.NewGuid().ToString(); // dummy
+                // Spara gameId och playerId i localStorage så Game.razor kan använda dem
+                await JS.InvokeVoidAsync("localStorage.setItem", "gameId", result.GameId.ToString());
+                await JS.InvokeVoidAsync("localStorage.setItem", "playerId", result.PlayerId.ToString());
 
-        await JS.InvokeVoidAsync("localStorage.setItem", "playerToken", playerToken);
-        await JS.InvokeVoidAsync("localStorage.setItem", "gameId", gameId);
+                createdGameId = result.GameId.ToString();
+                joinLink = $"{Nav.BaseUri}?join={createdGameId}";
+            }
+            catch
+            {
+                // TODO: visa felmeddelande om API inte svarar
+            }
+        }
 
-        Nav.NavigateTo($"/game/{gameId}");
-    }
+        private async Task JoinGame()
+        {
+            await JoinAndNavigate(joinGameId);
+        }
 
-    private void GoToGame()
-    {
-        Nav.NavigateTo($"/game/{createdGameId}");
-    }
+        private async Task JoinAndNavigate(string gameId)
+        {
+            try
+            {
+                // POST /api/game/{gameId}/join — spelare 2 ansluter
+                var response = await Http.PostAsJsonAsync($"api/game/{gameId}/join",
+                    new { PlayerName = "Player2" });
 
-    private async Task CopyLink()
-    {
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", joinLink);
+                if (!response.IsSuccessStatusCode) return;
+
+                var result = await response.Content
+                    .ReadFromJsonAsync<JoinGameResponse>();
+
+                if (result == null) return;
+
+                // Spara gameId och playerId i localStorage
+                await JS.InvokeVoidAsync("localStorage.setItem", "gameId", result.GameId.ToString());
+                await JS.InvokeVoidAsync("localStorage.setItem", "playerId", result.PlayerId.ToString());
+
+                Nav.NavigateTo($"/game/{gameId}");
+            }
+            catch
+            {
+                // TODO: visa felmeddelande om API inte svarar
+            }
+        }
+
+        private void GoToGame()
+        {
+            Nav.NavigateTo($"/game/{createdGameId}");
+        }
+
+        private async Task CopyLink()
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", joinLink);
+        }
     }
 }
