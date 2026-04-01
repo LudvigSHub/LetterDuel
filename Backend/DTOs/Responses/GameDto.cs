@@ -12,6 +12,7 @@ namespace LetterDuel.Backend.DTOs.Responses
         //id på spelarens vars tur det är
         public List<char> GuessedLetters { get; set; } = new();
         public Guid? WinnerId { get; set; }
+        public bool IsDraw { get; set; }
         public Guid CurrentPlayerId { get; set; }
     }
 }
