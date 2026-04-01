@@ -1,0 +1,306 @@
+﻿@page "/game/{GameId}"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject HttpClient Http
+@implements IAsyncDisposable
+
+<PageTitle>LetterDuel - Game</PageTitle>
+
+<div class="container mt-4">
+
+    <!--
+        Visar vilket player number du är
+        (?)myPlayerNumber bestäms nu genom att matcha playerToken mot players-listan från API
+    -->
+    <div class="text-center mb-3">
+        <span class="badge @(myPlayerNumber == 1 ? "bg-primary" : "bg-danger") fs-6">
+            You are Player @myPlayerNumber
+        </span>
+    </div>
+
+    <!--
+        Visar poäng och vems tur det är
+        player1Score och player2Score kommer nu från API via RefreshGameState
+        currentTurn baseras på currentPlayerId från API, matchat mot myPlayerId
+    -->
+    <div class="row text-center mb-4">
+        <div class="col">
+            <h5>Player 1</h5>
+            <span class="badge bg-primary fs-5">@player1Score p</span>
+            @if (currentTurn == 1)
+            {
+                <div>
+                    <span class="badge bg-success mt-1">
+                        @(myPlayerNumber == 1 ? "Your turn!" : "Their turn")
+                    </span>
+                </div>
+            }
+        </div>
+        <div class="col-auto align-self-center">
+            <h5>VS</h5>
+        </div>
+        <div class="col">
+            <h5>Player 2</h5>
+            <span class="badge bg-danger fs-5">@player2Score p</span>
+            @if (currentTurn == 2)
+            {
+                <div>
+                    <span class="badge bg-success mt-1">
+                        @(myPlayerNumber == 2 ? "Your turn!" : "Their turn")
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!--
+        Visar ordets bokstäver som rutor
+        maskedWord kommer nu från API via RefreshGameState
+    -->
+    <div class="text-center mb-4">
+        <div class="d-flex justify-content-center gap-2 flex-wrap">
+            @foreach (var ch in maskedWord)
+            {
+                <div class="border border-2 d-flex align-items-center justify-content-center"
+                     style="width:50px;height:60px;font-size:1.8rem;font-weight:bold;">
+                    @(ch == '_' ? "" : ch.ToString())
+                </div>
+            }
+        </div>
+    </div>
+
+    <!--
+        Visar gissade bokstäver
+        guessedLetters kommer nu från API via RefreshGameState
+        färgkodning: rätta gissningar är gröna, felaktiga är grå
+        correctLetters byggs upp lokalt baserat på om bokstaven finns i maskedWord
+    -->
+    <div class="text-center mb-4">
+        <p>
+            <strong>Guessed letters:</strong>
+            @foreach (var letter in guessedLetters)
+            {
+                <span class="badge @(correctLetters.Contains(letter) ? "bg-success" : "bg-secondary") me-1">
+                    @letter
+                </span>
+            }
+        </p>
+    </div>
+
+    <!--
+        Input visas bara när det är din tur, annars "Waiting..."
+        currentTurn jämförs nu mot myPlayerId från localStorage via currentPlayerId från API
+    -->
+    <div class="row justify-content-center mb-3">
+        <div class="col-md-3 text-center">
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <!-- visar felmeddelande vid ogiltig gissning -->
+                <div class="alert alert-danger py-1 mb-2">@errorMessage</div>
+            }
+
+            @if (currentTurn == myPlayerNumber)
+            {
+                <input class="form-control text-center mb-2"
+                       maxlength="1"
+                       placeholder="A-Z"
+                       @bind="currentGuess" />
+                <button class="btn btn-success w-100" @onclick="MakeGuess" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <!-- spinner medan gissning skickas till API -->
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                    }
+                    Guess!
+                </button>
+            }
+            else
+            {
+                <p class="text-muted fst-italic">Waiting for other player...</p>
+            }
+        </div>
+    </div>
+
+    <!--
+        Game ID visas så spelare 1 enkelt kan dela det
+    -->
+    <div class="text-center mt-4">
+        <small class="text-muted">Game ID: <strong>@GameId</strong></small>
+    </div>
+
+</div>
+
+@code {
+    [Parameter] public string GameId { get; set; } = "";
+
+    [Parameter, SupplyParameterFromQuery]
+    public int? Player { get; set; }
+
+    private string playerToken = "";
+    private Guid myPlayerId;
+    private int myPlayerNumber = 0;
+
+    // State från API, ersätter det vi hade som dummydata
+    private int player1Score = 0;
+    private int player2Score = 0;
+    private int currentTurn = 1;
+    private List<char> maskedWord = new();
+    private List<string> guessedLetters = new();
+
+    // håller koll på rätta gissningar för färgkodning
+    private HashSet<string> correctLetters = new();
+
+    private string currentGuess = "";
+    private string errorMessage = "";  // felmeddelanden
+    private bool isLoading = false;    // laddningsgrejsimojs
+
+    private Timer? _timer;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Hämta playerToken och playerId från localStorage
+            playerToken = await JS.InvokeAsync<string>("localStorage.getItem", "playerToken") ?? "";
+            var playerIdStr = await JS.InvokeAsync<string>("localStorage.getItem", "playerId") ?? "";
+            Guid.TryParse(playerIdStr, out myPlayerId);
+
+            // Hämta initial state från API direkt vid inladdning
+            await RefreshGameState();
+
+            // Starta polling var 800ms — samma intervall som every_second_letter
+            _timer = new Timer(async _ =>
+            {
+                await RefreshGameState();
+                await InvokeAsync(StateHasChanged);
+            }, null, 800, 800);
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshGameState()
+    {
+        try
+        {
+            // GET /api/games/{GameId} — hämtar aktuell spelstate från API
+            var game = await Http.GetFromJsonAsync<GameDto>($"api/games/{GameId}");
+            if (game == null) return;
+
+            // Uppdatera maskedWord från API
+            maskedWord = game.MaskedWord.ToList();
+
+            // Uppdatera gissade bokstäver från API
+            var newGuessedLetters = game.GuessedLetters.Select(c => c.ToString()).ToList();
+
+            // Bygg upp correctLetters baserat på vad som syns i maskedWord
+            foreach (var letter in newGuessedLetters)
+            {
+                if (game.MaskedWord.Contains(letter[0]))
+                    correctLetters.Add(letter);
+            }
+
+            guessedLetters = newGuessedLetters;
+
+            // Poäng från API
+            player1Score = game.Players.ElementAtOrDefault(0)?.Score ?? 0;
+            player2Score = game.Players.ElementAtOrDefault(1)?.Score ?? 0;
+
+            // Bestäm myPlayerNumber genom att matcha myPlayerId mot players-listan
+            // Sätts bara en gång — annars kan den flippas vid varje poll
+            if (myPlayerNumber == 0)
+            {
+                var me = game.Players.FirstOrDefault(p => p.Id == myPlayerId);
+                if (me != null)
+                    myPlayerNumber = game.Players.IndexOf(me) + 1;
+            }
+
+            // Bestäm vems tur det är baserat på currentPlayerId från API
+            if (game.CurrentPlayerId == game.Players.ElementAtOrDefault(0)?.Id)
+                currentTurn = 1;
+            else
+                currentTurn = 2;
+
+            // Navigera till resultatsida när spelet är slut
+            if (game.State == "GameFinished")
+            {
+                await InvokeAsync(() => Nav.NavigateTo($"/game/{GameId}/result"));
+            }
+        }
+        catch
+        {
+            // Tyst fel — polling försöker igen om 800ms
+        }
+    }
+
+    private async Task MakeGuess()
+    {
+        // Rensa felmeddelande vid nytt försök
+        errorMessage = "";
+
+        if (string.IsNullOrWhiteSpace(currentGuess)) return;
+
+        var letter = currentGuess.ToUpper()[0];
+
+        // Validera redan gissad bokstav direkt i UI innan API-anrop
+        if (guessedLetters.Contains(letter.ToString()))
+        {
+            errorMessage = $"{letter} has already been guessed!";
+            currentGuess = "";
+            return;
+        }
+
+        isLoading = true;
+
+        try
+        {
+            // POST /api/game/{GameId}/guess — skickar gissning till API
+            var response = await Http.PostAsJsonAsync($"api/games/{GameId}/guess", new
+            {
+                PlayerId = myPlayerId,
+                Letter = letter.ToString()
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Visa felmeddelande från API t.ex. "It is not this players turn"
+                errorMessage = await response.Content.ReadAsStringAsync();
+            }
+
+            // RefreshGameState via polling uppdaterar UI automatiskt
+        }
+        catch
+        {
+            errorMessage = "Something went wrong. Try again.";
+        }
+        finally
+        {
+            isLoading = false;
+            currentGuess = "";
+        }
+    }
+
+    // DTOs som matchar vad API returnerar
+    private record GameDto(
+        Guid Id,
+        string State,
+        string MaskedWord,
+        List<char> GuessedLetters,
+        Guid? CurrentPlayerId,
+        List<PlayerDto> Players,
+        Guid? WinnerId
+    );
+
+    private record PlayerDto(Guid Id, string Name, int Score)
+    {
+        // Behövs för IndexOf att funka 
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // Stoppa polling när komponenten stängs
+        if (_timer != null)
+            await _timer.DisposeAsync();
+    }
+}

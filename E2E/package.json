@@ -1,0 +1,30 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@playwright/test": "^1.59.0",
+    "playwright-bdd": "^8.5.0"
+  },
+  {
+   "name": "e2e",
+   "version": "1.0.0",
+   "type": "module",
+   "scripts": {
+     "test": "npx bddgen && npx playwright test",
+     "test:headed": "npx bddgen && npx playwright test --headed"
+   },
+   "dependencies": {
+     "@playwright/test": "^1.x.x",
+     "playwright-bdd": "^x.x.x"
+    }
+  }
+}
