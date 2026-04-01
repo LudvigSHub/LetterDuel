@@ -2,6 +2,14 @@ using LetterDuel.UI.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy.WithOrigins("https://localhost:7XXX") // byt ut porten mot Blazor-projektets port
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -16,6 +24,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+app.UseCors();
 app.UseHttpsRedirection();
 
 app.UseAntiforgery();
