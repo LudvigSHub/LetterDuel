@@ -185,7 +185,7 @@
         try
         {
             // GET /api/game/{GameId} — hämtar aktuell spelstate från API
-            var game = await Http.GetFromJsonAsync<GameDto>($"api/game/{GameId}");
+            var game = await Http.GetFromJsonAsync<GameDto>($"api/games/{GameId}");
             if (game == null) return;
 
             // Uppdatera maskedWord från API
@@ -252,7 +252,7 @@
         try
         {
             // POST /api/game/{GameId}/guess — skickar gissning till API
-            var response = await Http.PostAsJsonAsync($"api/game/{GameId}/guess", new
+            var response = await Http.PostAsJsonAsync($"api/games/{GameId}/guess", new
             {
                 PlayerId = myPlayerId,
                 Letter = letter.ToString()

@@ -8,7 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace LetterDuel.Backend.Controllers
 {
     [ApiController]
-    [Route("api/[games]")]
+    [Route("api/games")]
+    [IgnoreAntiforgeryToken]
     public class GameController : ControllerBase
     {
         private readonly GameService _gameService;
@@ -20,7 +21,7 @@ namespace LetterDuel.Backend.Controllers
 
         //Skapa nytt spel
         [HttpPost]
-        public async Task<ActionResult<CreateGameResponse>> CreateGame(CreateGameRequest request)
+        public async Task<ActionResult<CreateGameResponse>> CreateGame([FromBody] CreateGameRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.PlayerName))
                 return BadRequest("PlayerName is required");

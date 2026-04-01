@@ -9,6 +9,11 @@
 <div class="container mt-5">
     <h1 class="text-center mb-4">⚔️ LetterDuel</h1>
 
+   @*  @if (!string.IsNullOrEmpty(Join))
+    {
+        <div class="alert alert-info">Join parameter: @Join</div>
+    } *@
+
     @if (createdGameId == "")
     {
         <div class="row justify-content-center">
@@ -44,11 +49,16 @@
             </div>
         </div>
     }
+
+    @if (!string.IsNullOrEmpty(debugError))
+    {
+        <div class="alert alert-danger mt-3">@debugError</div>
+    }
 </div>
 
 @code {
-    [Parameter, SupplyParameterFromQuery]
-    public string? Join { get; set; }
+    // [Parameter, SupplyParameterFromQuery]
+    // public string? Join { get; set; }
 
     private string joinGameId = "";
     private string createdGameId = "";
@@ -56,28 +66,46 @@
 
     private record CreateGameResponse(Guid GameId, Guid PlayerId, string PlayerName);
     private record JoinGameResponse(Guid GameId, Guid PlayerId, string PlayerName);
-
+   
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && !string.IsNullOrEmpty(Join))
+        if (firstRender)
         {
-            await JoinAndNavigate(Join);
+            var uri = Nav.ToAbsoluteUri(Nav.Uri);
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        
+            if (query.TryGetValue("join", out var joinParam) && !string.IsNullOrEmpty(joinParam))
+            {
+                await JoinAndNavigate(joinParam!);
+            }
         }
     }
+
+    private string debugError = "";
 
     private async Task CreateGame()
     {
         try
         {
             var response = await Http.PostAsJsonAsync("api/games",
-            new { PlayerName = "Player1" });
+    new { PlayerName = "Player1", SecretWord = "" });
 
-            if (!response.IsSuccessStatusCode) return;
+            debugError = $"Status: {response.StatusCode}";
+
+            if (!response.IsSuccessStatusCode)
+            {
+                debugError = $"Fel: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}";
+                return;
+            }
 
             var result = await response.Content
                 .ReadFromJsonAsync<CreateGameResponse>();
 
-            if (result == null) return;
+            if (result == null)
+            {
+                debugError = "Result var null";
+                return;
+            }
 
             await JS.InvokeVoidAsync("localStorage.setItem", "gameId", result.GameId.ToString());
             await JS.InvokeVoidAsync("localStorage.setItem", "playerId", result.PlayerId.ToString());
@@ -85,9 +113,9 @@
             createdGameId = result.GameId.ToString();
             joinLink = $"{Nav.BaseUri}?join={createdGameId}";
         }
-        catch
+        catch (Exception ex)
         {
-            // TODO: visa felmeddelande om API inte svarar
+            debugError = $"Exception: {ex.Message}";
         }
     }
 
@@ -101,23 +129,33 @@
         try
         {
             var response = await Http.PostAsJsonAsync($"api/games/{gameId}/join",
-    new { PlayerName = "Player2" });
+                new { PlayerName = "Player2" });
 
-            if (!response.IsSuccessStatusCode) return;
+            debugError = $"Join status: {response.StatusCode}";
+
+            if (!response.IsSuccessStatusCode)
+            {
+                debugError = $"Join fel: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}";
+                return;
+            }
 
             var result = await response.Content
                 .ReadFromJsonAsync<JoinGameResponse>();
 
-            if (result == null) return;
+            if (result == null)
+            {
+                debugError = "Join result var null";
+                return;
+            }
 
             await JS.InvokeVoidAsync("localStorage.setItem", "gameId", result.GameId.ToString());
             await JS.InvokeVoidAsync("localStorage.setItem", "playerId", result.PlayerId.ToString());
 
             Nav.NavigateTo($"/game/{gameId}");
         }
-        catch
+        catch (Exception ex)
         {
-            // TODO: visa felmeddelande om API inte svarar
+            debugError = $"Join exception: {ex.Message}";
         }
     }
 

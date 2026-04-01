@@ -5,7 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://localhost:7051/")
+    BaseAddress = new Uri("https://localhost:7100/")
 });
 
 // Add services to the container.
