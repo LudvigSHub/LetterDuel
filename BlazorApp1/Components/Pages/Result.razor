@@ -1,0 +1,116 @@
+﻿@page "/game/{GameId}/result"
+@rendermode InteractiveServer
+@inject NavigationManager Nav
+@inject HttpClient Http
+
+<PageTitle>LetterDuel - Result</PageTitle>
+
+<div class="container mt-5 text-center">
+
+    <h1 class="mb-4">🏆 Game Over!</h1>
+
+    @if (isLoading)
+    {
+        <p class="text-muted">Loading result...</p>
+        <div class="spinner-border"></div>
+    }
+    else
+    {
+        <h3 class="mb-4">The word was: <strong>@secretWord</strong></h3>
+
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-4">
+                <div class="card @(winnerId == player1Id ? "border-success border-3" : "")">
+                    <div class="card-body">
+                        <h5>@player1Name</h5>
+                        <p class="fs-3">@player1Score p</p>
+                        @if (winnerId == player1Id && !isDraw)
+                        {
+                            <span class="badge bg-success">Winner! 🎉</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card @(winnerId == player2Id ? "border-success border-3" : "")">
+                    <div class="card-body">
+                        <h5>@player2Name</h5>
+                        <p class="fs-3">@player2Score p</p>
+                        @if (winnerId == player2Id && !isDraw)
+                        {
+                            <span class="badge bg-success">Winner! 🎉</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (isDraw)
+        {
+            <h4 class="text-warning mb-4">It's a draw! 🤝</h4>
+        }
+
+        <button class="btn btn-primary mt-3" @onclick='() => Nav.NavigateTo("/")'>
+            Play Again
+        </button>
+    }
+
+</div>
+
+@code {
+    [Parameter] public string GameId { get; set; } = "";
+
+    private bool isLoading = true;
+    private bool isDraw = false;
+
+    private string secretWord = "";
+    private string player1Name = "";
+    private string player2Name = "";
+    private int player1Score = 0;
+    private int player2Score = 0;
+    private Guid? player1Id;
+    private Guid? player2Id;
+    private Guid? winnerId;
+
+    private record GameDto(
+        Guid Id,
+        string State,
+        string MaskedWord,
+        List<char> GuessedLetters,
+        Guid? CurrentPlayerId,
+        List<PlayerDto> Players,
+        Guid? WinnerId
+    );
+    private record PlayerDto(Guid Id, string Name, int Score);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var game = await Http.GetFromJsonAsync<GameDto>($"api/games/{GameId}");
+            if (game == null) return;
+
+            var p1 = game.Players.ElementAtOrDefault(0);
+            var p2 = game.Players.ElementAtOrDefault(1);
+
+            player1Name = p1?.Name ?? "Player 1";
+            player2Name = p2?.Name ?? "Player 2";
+            player1Score = p1?.Score ?? 0;
+            player2Score = p2?.Score ?? 0;
+            player1Id = p1?.Id;
+            player2Id = p2?.Id;
+            winnerId = game.WinnerId;
+
+            // Visa hela ordet
+            secretWord = game.MaskedWord;
+
+            // Oavgjort om ingen vinnare
+            isDraw = winnerId == null && game.State == "GameFinished";
+        }
+        catch { }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
