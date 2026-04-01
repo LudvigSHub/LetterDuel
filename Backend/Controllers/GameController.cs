@@ -92,6 +92,7 @@ namespace LetterDuel.Backend.Controllers
         // DTO mapping
         private GameDto MapToDto(Domain.Game game)
         {
+            var winner = _gameService.GetWinner(game);
             return new GameDto
             {
                 Id = game.Id,
@@ -105,7 +106,8 @@ namespace LetterDuel.Backend.Controllers
                 State = game.State.ToString(),
                 CurrentPlayerId = game.Players[game.CurrentPlayerIndex].Id,
                 GuessedLetters = _gameService.GetGuessedLetters(game),
-                WinnerId = _gameService.GetWinner(game)?.Id
+                WinnerId = winner?.Id,
+                IsDraw = winner == null && game.State == GameState.GameFinished
             };
         }
     }

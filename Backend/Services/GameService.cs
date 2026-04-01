@@ -170,9 +170,16 @@ namespace LetterDuel.Backend.Services
             if (game.State != GameState.GameFinished)
                 return null;
 
-            return game.Players
-                .OrderByDescending(p => p.Score)
-                .FirstOrDefault();
+            var maxScore = game.Players.Max(p => p.Score);
+
+            var topPlayers = game.Players
+                .Where(p => p.Score == maxScore)
+                .ToList();
+
+            if (topPlayers.Count > 1)
+                return null; //draw
+
+            return topPlayers.First();
         }
 
         // Hjälpmetoder
