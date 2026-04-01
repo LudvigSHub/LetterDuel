@@ -29,5 +29,15 @@ namespace LetterDuel.Tests
         {
             return Task.FromResult(Words.ToList());
         }
+
+        public Task AddPlayerAsync(Player player)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task SaveChangesAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

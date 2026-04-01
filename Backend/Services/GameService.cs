@@ -28,7 +28,7 @@ namespace LetterDuel.Backend.Services
 
             var game = new Game
             {
-                SecretWord = randomWord.ToUpperInvariant(),
+                SecretWord = "APPLE",
                 State = GameState.WaitingForPlayers,
                 CurrentPlayerIndex = 0
             };
@@ -36,7 +36,8 @@ namespace LetterDuel.Backend.Services
             var player = new Player
             {
                 Name = playerName,
-                GameId = game.Id
+                GameId = game.Id,
+                PlayerNumber = 1,
             };
 
             game.Players.Add(player);
@@ -47,7 +48,8 @@ namespace LetterDuel.Backend.Services
             {
                 GameId = savedGame.Id,
                 PlayerId = player.Id,
-                PlayerName = player.Name
+                PlayerName = player.Name,
+                PlayerNumber = player.PlayerNumber
             };
         }
 
@@ -65,14 +67,15 @@ namespace LetterDuel.Backend.Services
             var player = new Player
             {
                 Name = playerName,
-                GameId = game.Id
+                GameId = game.Id,
+                PlayerNumber = 2,
             };
             await _repo.AddPlayerAsync(player);
 
 
 
-            if (game.Players.Count == 2)
-                game.State = GameState.InProgress;
+            
+              game.State = GameState.InProgress;
 
             await _repo.SaveChangesAsync();
 
@@ -80,7 +83,8 @@ namespace LetterDuel.Backend.Services
             {
                 GameId = game.Id,
                 PlayerId = player.Id,
-                PlayerName = player.Name
+                PlayerName = player.Name,
+                PlayerNumber= player.PlayerNumber
             };
         }
         

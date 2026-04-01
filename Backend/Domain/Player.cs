@@ -13,5 +13,6 @@
         //spelarens nuvarande poäng under nuvarande spel
         public int Score { get; set; }
         public Game Game { get; set; } = null!;
+        public int PlayerNumber { get; set; }
     }
 }
