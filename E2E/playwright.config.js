@@ -1,14 +1,17 @@
-import { defineConfig } from '@playwright/test';
-import { defineBddConfig } from 'playwright-bdd';
+import { defineConfig } from "@playwright/test";
+import { defineBddConfig } from "playwright-bdd";
 
 const testDir = defineBddConfig({
-    features: 'features/**/*.feature',
-    steps: 'features/steps/**/*.js',
+  features: "features/**/*.feature",
+  steps: "features/steps/**/*.js",
+  outputDir: ".features-gen",
 });
 
 export default defineConfig({
-    testDir,
-    use: {
-        baseURL: 'http://localhost:5000',
-    },
+  testDir: ".features-gen",
+  timeout: 30000,
+  use: {
+    baseURL: "http://localhost:5239",
+    headless: false,
+  },
 });
