@@ -20,11 +20,8 @@ namespace LetterDuel.Backend.Data
                .HasForeignKey(p => p.GameId)
                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<GameWord>().HasData(
-                new GameWord { Id = 1, Word = "Knowledge" },
-                new GameWord { Id = 2, Word = "Dangerous" },
-                new GameWord { Id = 3, Word = "Discovery" }
-            );
+            
+            
         }
 
 

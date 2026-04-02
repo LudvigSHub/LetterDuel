@@ -62,23 +62,6 @@ namespace LetterDuel.Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("GameWords");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Word = "Knowledge"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Word = "Dangerous"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Word = "Discovery"
-                        });
                 });
 
             modelBuilder.Entity("LetterDuel.Backend.Domain.Player", b =>
