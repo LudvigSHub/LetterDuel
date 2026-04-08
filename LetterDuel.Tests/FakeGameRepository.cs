@@ -32,12 +32,20 @@ namespace LetterDuel.Tests
 
         public Task AddPlayerAsync(Player player)
         {
-            throw new NotImplementedException();
+            var game = _games.FirstOrDefault(g => g.Id == player.GameId);
+
+            if (game != null)
+            {
+                player.Game = game;
+                game.Players.Add(player);
+            }
+
+            return Task.CompletedTask;
         }
 
         public Task SaveChangesAsync()
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
     }
 }

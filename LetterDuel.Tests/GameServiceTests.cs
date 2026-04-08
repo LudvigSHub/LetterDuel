@@ -277,6 +277,57 @@ namespace LetterDuel.Tests
             Assert.Null(winner);
         }
 
+        //Om lika ska winner vara null
+        [Fact]
+        public void GetWinner_Should_Return_Null_If_Draw()
+        {
+            var game = new Game
+            {
+                State = GameState.GameFinished
+            };
+
+            game.Players.Add(new Player { Score = 10 });
+            game.Players.Add(new Player { Score = 10 });
+
+            var winner = _service.GetWinner(game);
+
+            Assert.Null(winner);
+        }
+
+        [Fact]
+        public async Task SwitchTurns_After_Guess_P2_To_P1()
+        {
+            var (game, player1, player2) = await CreateStartedGame("ABCD");
+
+            await _service.GuessLetter(game.Id, player1.Id, "A");
+             var updated = await _service.GuessLetter(game.Id, player2.Id, "B");
+
+            Assert.NotNull(updated);
+            Assert.Equal(0, updated!.CurrentPlayerIndex);
+        }
+
+        [Fact]
+        public void IsWordFullyGuessed_Should_Return_False_When_Not_All_Letters_Are_Guessed()
+        {
+            var game = new Game
+            {
+                SecretWord = "APPLE",
+                GuessedLetters = "APL"
+            };
+
+            var result = _service.IsWordFullyGuessed(game);
+
+            Assert.False(result);
+        } 
+
+    [Fact]
+    public async Task GuessLetter_Should_Return_Null_If_Game_Not_Found()
+        {
+            var result = await _service.GuessLetter(Guid.NewGuid(), Guid.NewGuid(), "A");
+
+            Assert.Null(result);
+        }
+    
         private void SetSingleWord(string word)
         {
             _repo.Words.Clear();
