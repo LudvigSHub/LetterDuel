@@ -17,14 +17,11 @@ async function createGame(page) {
 
 async function joinGame(page, gameId) {
   await page.goto(BASE_URL);
+  await page.waitForLoadState("networkidle");
   await page.fill('input[placeholder="Enter Game ID"]', gameId);
-
-  // Starta navigation och klicka simultaneously
-  await Promise.all([
-    page.waitForURL(/\/game\/.+/, { timeout: 20000 }),
-    page.click("text=Join Game"),
-  ]);
-
+  await page.click("text=Join Game");
+  await page.waitForTimeout(3000);
+  await page.waitForURL(/\/game\/.+/, { timeout: 20000 });
   await page.screenshot({ path: `debug-join-${Date.now()}.png` });
 }
 
