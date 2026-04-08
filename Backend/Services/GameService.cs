@@ -28,7 +28,7 @@ namespace LetterDuel.Backend.Services
 
             var game = new Game
             {
-                SecretWord = "APPLE",
+                SecretWord = randomWord,
                 State = GameState.WaitingForPlayers,
                 CurrentPlayerIndex = 0
             };

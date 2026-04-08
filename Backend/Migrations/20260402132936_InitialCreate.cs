@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace LetterDuel.Backend.Migrations
 {
     /// <inheritdoc />
@@ -48,7 +46,8 @@ namespace LetterDuel.Backend.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     GameId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Score = table.Column<int>(type: "int", nullable: false)
+                    Score = table.Column<int>(type: "int", nullable: false),
+                    PlayerNumber = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -59,16 +58,6 @@ namespace LetterDuel.Backend.Migrations
                         principalTable: "Games",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.InsertData(
-                table: "GameWords",
-                columns: new[] { "Id", "Word" },
-                values: new object[,]
-                {
-                    { 1, "Knowledge" },
-                    { 2, "Dangerous" },
-                    { 3, "Discovery" }
                 });
 
             migrationBuilder.CreateIndex(

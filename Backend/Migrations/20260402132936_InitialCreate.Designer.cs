@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LetterDuel.Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260401120632_NewPlayerModel")]
-    partial class NewPlayerModel
+    [Migration("20260402132936_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -65,23 +65,6 @@ namespace LetterDuel.Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("GameWords");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Word = "Knowledge"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Word = "Dangerous"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Word = "Discovery"
-                        });
                 });
 
             modelBuilder.Entity("LetterDuel.Backend.Domain.Player", b =>
@@ -93,12 +76,12 @@ namespace LetterDuel.Backend.Migrations
                     b.Property<Guid>("GameId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("JoinOrder")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PlayerNumber")
+                        .HasColumnType("int");
 
                     b.Property<int>("Score")
                         .HasColumnType("int");
