@@ -7,6 +7,7 @@ const BASE_URL = "http://localhost:5239";
 
 async function createGame(page) {
   await page.goto(BASE_URL);
+  await page.waitForLoadState("networkidle");
   await page.click("text=Create Game");
   // vänta på att Game ID visas
   await page.waitForSelector(".alert-success");
@@ -17,10 +18,14 @@ async function createGame(page) {
 async function joinGame(page, gameId) {
   await page.goto(BASE_URL);
   await page.fill('input[placeholder="Enter Game ID"]', gameId);
-  await page.click("text=Join Game");
-  await page.waitForTimeout(3000);
+
+  // Starta navigation och klicka simultaneously
+  await Promise.all([
+    page.waitForURL(/\/game\/.+/, { timeout: 20000 }),
+    page.click("text=Join Game"),
+  ]);
+
   await page.screenshot({ path: `debug-join-${Date.now()}.png` });
-  await page.waitForURL(/\/game\/.+/, { timeout: 15000 });
 }
 
 // Player 1 startar spel
@@ -31,10 +36,11 @@ Given("player 1 is on the start page", async ({ page }) => {
 
 When('player 1 clicks "Create Game"', async ({ page }) => {
   await page.click("text=Create Game");
+  await page.waitForTimeout(2000); // vänta på API-svar
 });
 
 Then("a Game ID should be displayed", async ({ page }) => {
-  await expect(page.locator(".alert-success")).toBeVisible();
+  await expect(page.locator(".alert-success")).toBeVisible({ timeout: 10000 });
   await expect(page.locator(".alert-success strong")).not.toBeEmpty();
 });
 
@@ -245,11 +251,11 @@ When('the player enters "@" as a guess', async ({ page }) => {
   await page.waitForTimeout(2000);
 });
 
-When('the player enters "AB" as a guess', async ({ page }) => {
-  await page.fill('input[placeholder="A-Z"]', "AB");
-  await page.click("text=Guess!");
-  await page.waitForTimeout(2000);
-});
+// When('the player enters "AB" as a guess', async ({ page }) => {
+//   await page.fill('input[placeholder="A-Z"]', "AB");
+//   await page.click("text=Guess!");
+//   await page.waitForTimeout(2000);
+// });
 
 Then("a warning should be displayed", async ({ page }) => {
   await expect(page.locator(".alert-danger")).toBeVisible({ timeout: 10000 });

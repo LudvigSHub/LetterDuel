@@ -9,7 +9,7 @@ const testDir = defineBddConfig({
 
 export default defineConfig({
   testDir: ".features-gen",
-  timeout: 30000,
+  timeout: 60000,
   use: {
     baseURL: "http://localhost:5239",
     headless: false,

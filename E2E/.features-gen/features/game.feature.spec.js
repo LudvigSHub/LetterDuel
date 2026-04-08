@@ -53,6 +53,15 @@ test.describe('LetterDuel Game Flow', () => {
     await And('the game state should not change', null, { page }); 
   });
 
+  test('Player enters a special character as guess', async ({ Given, When, Then, And, browser, page }) => { 
+    await Given('a game is in progress', null, { browser, page }); 
+    await And('it is the players turn', null, { page }); 
+    await When('the player enters "@" as a guess', null, { page }); 
+    await Then('a warning should be displayed', null, { page }); 
+    await And('the guess should not be accepted', null, { page }); 
+    await And('the game state should not change', null, { page }); 
+  });
+
 });
 
 // == technical section ==
@@ -72,4 +81,5 @@ const bddFileData = [ // bdd-data-start
   {"pwTestLine":35,"pickleLine":27,"tags":[],"steps":[{"pwStepLine":36,"gherkinStepLine":28,"keywordType":"Context","textWithKeyword":"Given the letter \"A\" has already been guessed","stepMatchArguments":[]},{"pwStepLine":37,"gherkinStepLine":29,"keywordType":"Action","textWithKeyword":"When player 1 tries to guess \"A\" again","stepMatchArguments":[]},{"pwStepLine":38,"gherkinStepLine":30,"keywordType":"Outcome","textWithKeyword":"Then an error message should be displayed","stepMatchArguments":[]}]},
   {"pwTestLine":41,"pickleLine":32,"tags":[],"steps":[{"pwStepLine":42,"gherkinStepLine":33,"keywordType":"Context","textWithKeyword":"Given only one letter remains","stepMatchArguments":[]},{"pwStepLine":43,"gherkinStepLine":34,"keywordType":"Action","textWithKeyword":"When the correct letter is guessed","stepMatchArguments":[]},{"pwStepLine":44,"gherkinStepLine":35,"keywordType":"Outcome","textWithKeyword":"Then the result page should be displayed","stepMatchArguments":[]}]},
   {"pwTestLine":47,"pickleLine":37,"tags":[],"steps":[{"pwStepLine":48,"gherkinStepLine":38,"keywordType":"Context","textWithKeyword":"Given a game is in progress","stepMatchArguments":[]},{"pwStepLine":49,"gherkinStepLine":39,"keywordType":"Context","textWithKeyword":"And it is the players turn","stepMatchArguments":[]},{"pwStepLine":50,"gherkinStepLine":40,"keywordType":"Action","textWithKeyword":"When the player enters \"7\" as a guess","stepMatchArguments":[]},{"pwStepLine":51,"gherkinStepLine":41,"keywordType":"Outcome","textWithKeyword":"Then a warning should be displayed","stepMatchArguments":[]},{"pwStepLine":52,"gherkinStepLine":42,"keywordType":"Outcome","textWithKeyword":"And the guess should not be accepted","stepMatchArguments":[]},{"pwStepLine":53,"gherkinStepLine":43,"keywordType":"Outcome","textWithKeyword":"And the game state should not change","stepMatchArguments":[]}]},
+  {"pwTestLine":56,"pickleLine":45,"tags":[],"steps":[{"pwStepLine":57,"gherkinStepLine":46,"keywordType":"Context","textWithKeyword":"Given a game is in progress","stepMatchArguments":[]},{"pwStepLine":58,"gherkinStepLine":47,"keywordType":"Context","textWithKeyword":"And it is the players turn","stepMatchArguments":[]},{"pwStepLine":59,"gherkinStepLine":48,"keywordType":"Action","textWithKeyword":"When the player enters \"@\" as a guess","stepMatchArguments":[]},{"pwStepLine":60,"gherkinStepLine":49,"keywordType":"Outcome","textWithKeyword":"Then a warning should be displayed","stepMatchArguments":[]},{"pwStepLine":61,"gherkinStepLine":50,"keywordType":"Outcome","textWithKeyword":"And the guess should not be accepted","stepMatchArguments":[]},{"pwStepLine":62,"gherkinStepLine":51,"keywordType":"Outcome","textWithKeyword":"And the game state should not change","stepMatchArguments":[]}]},
 ]; // bdd-data-end

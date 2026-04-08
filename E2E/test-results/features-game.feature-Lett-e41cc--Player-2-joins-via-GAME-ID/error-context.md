@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: features\game.feature.spec.js >> LetterDuel Game Flow >> Game ends when word is complete
-- Location: .features-gen\features\game.feature.spec.js:41:3
+- Name: features\game.feature.spec.js >> LetterDuel Game Flow >> Player 2 joins via GAME ID
+- Location: .features-gen\features\game.feature.spec.js:12:3
 
 # Error details
 
@@ -51,10 +51,10 @@ Call log:
   6   | const BASE_URL = "http://localhost:5239";
   7   | 
   8   | async function createGame(page) {
-  9   |   await page.goto(BASE_URL);
-  10  |   await page.waitForLoadState("networkidle");
-> 11  |   await page.click("text=Create Game");
+> 9   |   await page.goto(BASE_URL);
       |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5239/
+  10  |   await page.waitForLoadState("networkidle");
+  11  |   await page.click("text=Create Game");
   12  |   // vänta på att Game ID visas
   13  |   await page.waitForSelector(".alert-success");
   14  |   const gameId = await page.locator(".alert-success strong").textContent();
@@ -153,6 +153,4 @@ Call log:
   107 | 
   108 | When("player {int} guesses a letter", async ({ page }, playerNumber) => {
   109 |   await page.fill('input[placeholder="A-Z"]', "A");
-  110 |   await page.click("text=Guess!");
-  111 |   await page.waitForTimeout(1000);
 ```

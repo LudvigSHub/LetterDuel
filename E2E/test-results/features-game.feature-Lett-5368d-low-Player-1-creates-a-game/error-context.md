@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: features\game.feature.spec.js >> LetterDuel Game Flow >> Game ends when word is complete
-- Location: .features-gen\features\game.feature.spec.js:41:3
+- Name: features\game.feature.spec.js >> LetterDuel Game Flow >> Player 1 creates a game
+- Location: .features-gen\features\game.feature.spec.js:6:3
 
 # Error details
 
@@ -53,8 +53,7 @@ Call log:
   8   | async function createGame(page) {
   9   |   await page.goto(BASE_URL);
   10  |   await page.waitForLoadState("networkidle");
-> 11  |   await page.click("text=Create Game");
-      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5239/
+  11  |   await page.click("text=Create Game");
   12  |   // vänta på att Game ID visas
   13  |   await page.waitForSelector(".alert-success");
   14  |   const gameId = await page.locator(".alert-success strong").textContent();
@@ -77,7 +76,8 @@ Call log:
   31  | // Player 1 startar spel
   32  | 
   33  | Given("player 1 is on the start page", async ({ page }) => {
-  34  |   await page.goto(BASE_URL);
+> 34  |   await page.goto(BASE_URL);
+      |              ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5239/
   35  | });
   36  | 
   37  | When('player 1 clicks "Create Game"', async ({ page }) => {
@@ -155,4 +155,27 @@ Call log:
   109 |   await page.fill('input[placeholder="A-Z"]', "A");
   110 |   await page.click("text=Guess!");
   111 |   await page.waitForTimeout(1000);
+  112 | });
+  113 | 
+  114 | Then("it should be player 2s turn", async ({ page }) => {
+  115 |   const page2 = page["_page2"];
+  116 |   await page2.waitForTimeout(1000);
+  117 |   await expect(page2.locator("text=Your turn!")).toBeVisible();
+  118 | });
+  119 | 
+  120 | /////////////////////////////////////////////////////////////////////////////
+  121 | 
+  122 | // Korrekt gissning
+  123 | When(
+  124 |   "player {int} guesses a letter that exists in the word",
+  125 |   async ({ page }, playerNumber) => {
+  126 |     // Gissar E pga vanligt ord
+  127 |     await page.fill('input[placeholder="A-Z"]', "E");
+  128 |     await page.click("text=Guess!");
+  129 |     await page.waitForTimeout(1000);
+  130 |   },
+  131 | );
+  132 | 
+  133 | Then("the letter should be shown in the word", async ({ page }) => {
+  134 |   // Kollar specifikt att en gissad bokstav badge visas
 ```
