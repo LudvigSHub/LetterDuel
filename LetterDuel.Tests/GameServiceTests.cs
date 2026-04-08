@@ -320,6 +320,13 @@ namespace LetterDuel.Tests
             Assert.False(result);
         } 
 
+    [Fact]
+    public async Task GuessLetter_Should_Return_Null_If_Game_Not_Found()
+        {
+            var result = await _service.GuessLetter(Guid.NewGuid(), Guid.NewGuid(), "A");
+
+            Assert.Null(result);
+        }
     
         private void SetSingleWord(string word)
         {
