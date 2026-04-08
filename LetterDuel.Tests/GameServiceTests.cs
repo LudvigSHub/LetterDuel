@@ -277,6 +277,23 @@ namespace LetterDuel.Tests
             Assert.Null(winner);
         }
 
+        //Om lika ska winner vara null
+        [Fact]
+        public void GetWinner_Should_Return_Null_If_Draw()
+        {
+            var game = new Game
+            {
+                State = GameState.GameFinished
+            };
+
+            game.Players.Add(new Player { Score = 10 });
+            game.Players.Add(new Player { Score = 10 });
+
+            var winner = _service.GetWinner(game);
+
+            Assert.Null(winner);
+        }
+
         private void SetSingleWord(string word)
         {
             _repo.Words.Clear();
