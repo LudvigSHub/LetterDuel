@@ -9,9 +9,6 @@ namespace LetterDuel.Backend.Data
         {
             await context.Database.MigrateAsync();
 
-            if (context.GameWords.Any())
-                return;
-
             var words = configuration
                 .GetSection("SeedWords")
                 .Get<string[]>() ?? Array.Empty<string>();
@@ -19,8 +16,20 @@ namespace LetterDuel.Backend.Data
             if (words.Length == 0)
                 return;
 
+            var existingWords = await context.GameWords.ToListAsync();
+
+            if (existingWords.Any())
+            {
+                context.GameWords.RemoveRange(existingWords);
+                await context.SaveChangesAsync();
+            }
+
             var gameWords = words
-                .Select(word => new GameWord { Word = word })
+                .Where(w => !string.IsNullOrWhiteSpace(w))
+                .Select(word => new GameWord
+                {
+                    Word = word.Trim().ToUpperInvariant()
+                })
                 .ToList();
 
             context.GameWords.AddRange(gameWords);

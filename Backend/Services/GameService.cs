@@ -26,6 +26,8 @@ namespace LetterDuel.Backend.Services
 
             var randomWord = words[Random.Shared.Next(words.Count)].Word;
 
+            randomWord = randomWord.ToUpperInvariant();
+
             var game = new Game
             {
                 SecretWord = randomWord,
