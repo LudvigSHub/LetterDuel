@@ -41,3 +41,12 @@ Scenario: Player enters a number as guess
     Then a warning should be displayed
     And the guess should not be accepted
     And the game state should not change
+
+Scenario: Player enters a special character as guess
+    Given a game is in progress
+    And it is the players turn
+    When the player enters "@" as a guess
+    Then a warning should be displayed
+    And the guess should not be accepted
+    And the game state should not change
+
