@@ -17,9 +17,9 @@ $backend = Start-Process -FilePath "dotnet" -ArgumentList "run --project Backend
 Write-Host "Waiting for Backend to start..."
 Start-Sleep -Seconds 45
 
-# Starta Blazor i bakgrunden
+# Starta Blazor med http-profilen
 Write-Host "Starting Blazor..."
-$blazor = Start-Process -FilePath "dotnet" -ArgumentList "run --project BlazorApp1" -WorkingDirectory $solutionDir -PassThru -WindowStyle Minimized
+$blazor = Start-Process -FilePath "dotnet" -ArgumentList "run --project BlazorApp1 --launch-profile DefaultProgram" -WorkingDirectory $solutionDir -PassThru -WindowStyle Minimized
 
 # Vänta på att Blazor startar
 Write-Host "Waiting for Blazor to start..."
