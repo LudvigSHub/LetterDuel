@@ -140,6 +140,7 @@
     private string playerToken = "";
     private Guid myPlayerId;
     private int myPlayerNumber = 0;
+    private bool _navigatedToResult = false;
 
     // State från API, ersätter det vi hade som dummydata
     private int player1Score = 0;
@@ -223,10 +224,13 @@
                 currentTurn = 2;
 
             // Navigera till resultatsida när spelet är slut
-            if (game.State == "GameFinished")
+            if (game.State == "GameFinished" && !_navigatedToResult)
             {
+                _navigatedToResult = true;
                 await InvokeAsync(() => Nav.NavigateTo($"/game/{GameId}/result"));
             }
+
+            
         }
         catch
         {
