@@ -29,6 +29,7 @@ async function joinGame(page, gameId) {
 
 Given("player 1 is on the start page", async ({ page }) => {
   await page.goto(BASE_URL);
+  await page.waitForLoadState("networkidle");
 });
 
 When('player 1 clicks "Create Game"', async ({ page }) => {
