@@ -1,0 +1,734 @@
+{
+  "info": {
+    "_postman_id": "481eb105-705f-4685-ba97-6b125e0bf42b",
+    "name": "LetterDuelTestning",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53362104",
+    "_collection_link": "https://go.postman.co/collection/53362104-481eb105-705f-4685-ba97-6b125e0bf42b?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "CreateGame_Valid",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "const jsonData = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Response contains gameId\", function () {\r",
+              "    pm.expect(jsonData.gameId).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains playerId\", function () {\r",
+              "    pm.expect(jsonData.playerId).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains correct playerName\", function () {\r",
+              "    pm.expect(jsonData.playerName).to.eql(\"Player1\");\r",
+              "});\r",
+              "\r",
+              "pm.environment.set(\"gameId\", jsonData.gameId);\r",
+              "pm.environment.set(\"player1Id\", jsonData.playerId);\r",
+              "pm.environment.set(\"player1Name\", jsonData.playerName);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"playerName\": \"Player1\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/games",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "games"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "JoinGame_Valid",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "if (pm.response.code === 200) {\r",
+              "    const jsonData = pm.response.json();\r",
+              "\r",
+              "    pm.test(\"Response contains gameId\", function () {\r",
+              "        pm.expect(jsonData.gameId).to.exist;\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Response contains playerId\", function () {\r",
+              "        pm.expect(jsonData.playerId).to.exist;\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Response contains correct playerName\", function () {\r",
+              "        pm.expect(jsonData.playerName).to.eql(\"player2\");\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Response contains playerNumber 2\", function () {\r",
+              "        pm.expect(jsonData.playerNumber).to.eql(1);\r",
+              "    });\r",
+              "\r",
+              "    pm.environment.set(\"gameId\", jsonData.gameId);\r",
+              "    pm.environment.set(\"player2Id\", jsonData.playerId);\r",
+              "    pm.environment.set(\"player2Name\", jsonData.playerName);\r",
+              "    pm.environment.set(\"player2Number\", jsonData.playerNumber);\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \r\n  \"playerName\": \"Player2\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/games/{{gameId}}/join",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "games",
+            "{{gameId}}",
+            "join"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guess_Player1_Valid",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "if (pm.response.code === 200) {\r",
+              "    const jsonData = pm.response.json();\r",
+              "\r",
+              "    pm.test(\"Response contains game id\", function () {\r",
+              "        pm.expect(jsonData.id).to.exist;\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"State exists\", function () {\r",
+              "        pm.expect(jsonData.state).to.exist;\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Current player id exists\", function () {\r",
+              "        pm.expect(jsonData.currentPlayerId).to.exist;\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Players list has 2 players\", function () {\r",
+              "        pm.expect(jsonData.players.length).to.eql(2);\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Guessed letters contains guessed letter\", function () {\r",
+              "        pm.expect(jsonData.guessedLetters).to.include(\"A\");\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Turn changed to player 2 unless game finished\", function () {\r",
+              "        if (jsonData.state !== \"GameFinished\") {\r",
+              "            pm.expect(jsonData.currentPlayerId).to.eql(pm.environment.get(\"player2Id\"));\r",
+              "        }\r",
+              "    });\r",
+              "\r",
+              "    pm.environment.set(\"lastGuessedLetter\", \"A\");\r",
+              "    pm.environment.set(\"currentPlayerId\", jsonData.currentPlayerId);\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"playerId\": \"{{player1Id}}\",\r\n  \"letter\": \"A\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/games/{{gameId}}/guess",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "games",
+            "{{gameId}}",
+            "guess"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guess_Player1_WrongTurn",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Error message says wrong turn\", function () {\r",
+              "    pm.expect(pm.response.text()).to.include(\"It is not this players turn\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"playerId\": \"{{player1Id}}\",\r\n  \"letter\": \"B\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/games/{{gameId}}/guess",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "games",
+            "{{gameId}}",
+            "guess"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guess_Player2_Valid",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "if (pm.response.code === 200) {\r",
+              "    const jsonData = pm.response.json();\r",
+              "\r",
+              "    pm.test(\"Guessed letters contains B\", function () {\r",
+              "        pm.expect(jsonData.guessedLetters).to.include(\"B\");\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Turn changed back unless game finished\", function () {\r",
+              "        if (jsonData.state !== \"GameFinished\") {\r",
+              "            pm.expect(jsonData.currentPlayerId).to.eql(pm.environment.get(\"player1Id\"));\r",
+              "        }\r",
+              "    });\r",
+              "\r",
+              "    pm.environment.set(\"currentPlayerId\", jsonData.currentPlayerId);\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"playerId\": \"{{player2Id}}\",\r\n  \"letter\": \"B\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/games/{{gameId}}/guess",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "games",
+            "{{gameId}}",
+            "guess"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guess_Player1_Turn2_Valid",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "if (pm.response.code === 200) {\r",
+              "    const jsonData = pm.response.json();\r",
+              "\r",
+              "    pm.test(\"Response contains game id\", function () {\r",
+              "        pm.expect(jsonData.id).to.exist;\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"State exists\", function () {\r",
+              "        pm.expect(jsonData.state).to.exist;\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Current player id exists\", function () {\r",
+              "        pm.expect(jsonData.currentPlayerId).to.exist;\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Players list has 2 players\", function () {\r",
+              "        pm.expect(jsonData.players.length).to.eql(2);\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Guessed letters contains guessed letter\", function () {\r",
+              "        pm.expect(jsonData.guessedLetters).to.include(\"A\");\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Turn changed to player 2 unless game finished\", function () {\r",
+              "        if (jsonData.state !== \"GameFinished\") {\r",
+              "            pm.expect(jsonData.currentPlayerId).to.eql(pm.environment.get(\"player2Id\"));\r",
+              "        }\r",
+              "    });\r",
+              "\r",
+              "    pm.environment.set(\"lastGuessedLetter\", \"O\");\r",
+              "    pm.environment.set(\"currentPlayerId\", jsonData.currentPlayerId);\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"playerId\": \"{{player1Id}}\",\r\n  \"letter\": \"O\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/game/{{gameId}}/guess",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "game",
+            "{{gameId}}",
+            "guess"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guess_InvalidInput_Number_.Player2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Error message says only letters allowed\", function () {\r",
+              "    pm.expect(pm.response.text()).to.include(\"Only letters A-Z are allowed\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"playerid\": \"{{player2Id}}\",\r\n  \"letter\": \"7\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/game/{{gameId}}/guess",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "game",
+            "{{gameId}}",
+            "guess"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guess_InvalidInput_MultipleChars_Player2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Error message says only letters allowed\", function () {\r",
+              "    pm.expect(pm.response.text()).to.include(\"Only letters A-Z are allowed\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"playerId\": \"{{player2Id}}\",\r\n  \"letter\": \"AB\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/game/{{gameId}}/guess",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "game",
+            "{{gameId}}",
+            "guess"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guess_DuplicateLetter_Player2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Error message says only letters allowed\", function () {\r",
+              "    pm.expect(pm.response.text()).to.include(\"Only letters A-Z are allowed\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"playerId\": \"{{player2Id}}\",\r\n  \"letter\": \"AB\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/game/{{gameId}}/guess",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "game",
+            "{{gameId}}",
+            "guess"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Guess_InvalidInput_SpecialChar_Player2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400\", function () {\r",
+              "    pm.response.to.have.status(400);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Error message says only letters allowed\", function () {\r",
+              "    pm.expect(pm.response.text()).to.include(\"Only letters A-Z are allowed\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"playerId\": \"{{player2Id}}\",\r\n  \"letter\": \"AB\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/game/{{gameId}}/guess",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "game",
+            "{{gameId}}",
+            "guess"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GetGame_Polling_Valid",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "LastGuess_Winner_Player2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "if (pm.response.code === 200) {\r",
+              "    const jsonData = pm.response.json();\r",
+              "\r",
+              "    const player1 = jsonData.players.find(p => p.id === pm.environment.get(\"player1Id\"));\r",
+              "    const player2 = jsonData.players.find(p => p.id === pm.environment.get(\"player2Id\"));\r",
+              "    const winner = jsonData.players.find(p => p.id === jsonData.winnerId);\r",
+              "\r",
+              "    pm.test(\"Game id is correct\", function () {\r",
+              "        pm.expect(jsonData.id).to.eql(pm.environment.get(\"gameId\"));\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"State is GameFinished\", function () {\r",
+              "        pm.expect(jsonData.state).to.eql(\"GameFinished\");\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Masked word is fully revealed\", function () {\r",
+              "        pm.expect(jsonData.maskedWord).to.eql(\"APPLE\");\r",
+              "        pm.expect(jsonData.maskedWord).to.not.include(\"_\");\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Guessed letters contains E\", function () {\r",
+              "        pm.expect(jsonData.guessedLetters).to.include(\"E\");\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Players array contains 2 players\", function () {\r",
+              "        pm.expect(jsonData.players).to.be.an(\"array\");\r",
+              "        pm.expect(jsonData.players.length).to.eql(2);\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Player1 and Player2 exist in response\", function () {\r",
+              "        pm.expect(player1).to.exist;\r",
+              "        pm.expect(player2).to.exist;\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Player numbers are correct\", function () {\r",
+              "        pm.expect(player1.playerNumber).to.eql(1);\r",
+              "        pm.expect(player2.playerNumber).to.eql(2);\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Scores are correct for APPLE flow\", function () {\r",
+              "        pm.expect(player1.score).to.eql(6);\r",
+              "        pm.expect(player2.score).to.eql(10);\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Game is not a draw\", function () {\r",
+              "        pm.expect(jsonData.isDraw).to.eql(false);\r",
+              "    });\r",
+              "\r",
+              "    pm.test(\"Winner is player2\", function () {\r",
+              "        pm.expect(jsonData.winnerId).to.eql(pm.environment.get(\"player2Id\"));\r",
+              "        pm.expect(winner).to.exist;\r",
+              "        pm.expect(winner.playerNumber).to.eql(2);\r",
+              "    });\r",
+              "\r",
+              "    pm.environment.set(\"gameState\", jsonData.state);\r",
+              "    pm.environment.set(\"winnerId\", jsonData.winnerId ?? \"\");\r",
+              "    pm.environment.set(\"isDraw\", jsonData.isDraw);\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"playerId\": \"{{player2Id}}\",\r\n  \"letter\": \"E\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/game/{{gameId}}/guess",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "game",
+            "{{gameId}}",
+            "guess"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "value": ""
+    }
+  ]
+}

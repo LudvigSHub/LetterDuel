@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/E2E/" />
+  <Folder Name="/PostmanFiles/">
+    <File Path="PostmanJsonFiles/LetterDuelEnvironment.postman_environment.json" />
+    <File Path="PostmanJsonFiles/LetterDuelTestning.postman_collection.json" />
+  </Folder>
   <Project Path="Backend/LetterDuel.Backend.csproj" />
   <Project Path="BlazorApp1/LetterDuel.UI.csproj" />
   <Project Path="LetterDuel.Tests/LetterDuel.Tests.csproj" Id="3c5957cb-031a-4c74-a56a-850feddaf986" />
