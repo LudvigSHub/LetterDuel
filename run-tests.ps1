@@ -15,7 +15,7 @@ $backend = Start-Process -FilePath "dotnet" -ArgumentList "run --project Backend
 
 # Vänta på att Backend startar
 Write-Host "Waiting for Backend to start..."
-Start-Sleep -Seconds 30
+Start-Sleep -Seconds 45
 
 # Starta Blazor i bakgrunden
 Write-Host "Starting Blazor..."
@@ -23,7 +23,7 @@ $blazor = Start-Process -FilePath "dotnet" -ArgumentList "run --project BlazorAp
 
 # Vänta på att Blazor startar
 Write-Host "Waiting for Blazor to start..."
-Start-Sleep -Seconds 30
+Start-Sleep -Seconds 45
 
 # Kör E2E-tester
 Write-Host "Running E2E tests..."
