@@ -2,10 +2,11 @@ using LetterDuel.UI.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5100/";
 
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("http://10.12.79.154:5100/")
+    BaseAddress = new Uri(apiBaseUrl)
 });
 
 // Add services to the container.
@@ -19,6 +20,7 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 //app.UseHttpsRedirection();
 app.UseAntiforgery();

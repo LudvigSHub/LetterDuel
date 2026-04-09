@@ -9,9 +9,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-        policy.WithOrigins("http://10.12.79.154:5239")
-              .AllowAnyHeader()
-              .AllowAnyMethod());
+    {
+        if (builder.Environment.IsEnvironment("Testing"))
+        {
+            policy.WithOrigins("http://localhost:5239")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+        else
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+    });
 });
 
 builder.Services.AddControllers(options =>
@@ -56,4 +67,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
 
