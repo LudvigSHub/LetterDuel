@@ -18,24 +18,28 @@ Example game states:
 - `InProgress`
 - `GameFinished`
 
-These states are part of the intended system behavior for the game. :contentReference[oaicite:0]{index=0} :contentReference[oaicite:1]{index=1}
+These states are part of the intended system behavior for the game.
 
 ## Requirements to Run the Project
 
-To run the application correctly, you must start **both the UI and the Backend at the same time**.
+To run the application normally, start both the UI and the Backend at the same time.
+Make sure both projects use the DefaultProgram launch profile.
+The DefaultProgram profile contains the larger seed data for playing the application as intended, with random seeded words.
 
-### Important
+### Important when doing Postman tests
 
 Set **both** projects as **Startup Projects** in Visual Studio:
 
 - `LetterDuel.UI`
 - `LetterDuel.Backend`
 
-Also make sure that **both projects use the `Testing` launch profile**.
-
-This is required because the **BDD tests** and **Postman tests** are written and configured to run against the application using the `Testing` profile for both the UI and the Backend.
+Also make sure that **both projects use the `Testing` launch profile**, when testing with postman.
 
 If you use another launch profile, the automated tests may fail because they expect the application to run with the testing-specific configuration.
+
+The Postman collection and environment are located in "PostmanFiles" in the solution folder.
+The postman tests are simulated to play a game with the word "APPLE"
+Make sure the baseUrl in the environment is correct, the url for the API is http://localhost:5100.
 
 ## Database Setup
 
@@ -47,20 +51,12 @@ update-database -Project LetterDuel.Backend -StartupProject LetterDuel.Backend
 
 ## BDD / E2E Testing
 
-The BDD / E2E tests must be run from **Visual Studio Code** (or another terminal environment), not from Visual Studio.
+BDD / E2E tests are located in the `E2E` folder and are written with Playwright.
 
-These tests are located in the `E2E` folder and use Playwright.
+Do not start the application manually before running these tests.
+The `run-tests.ps1` script handles that automatically.
 
-### Important
-
-Before running the BDD tests:
-
-- Make sure **both UI and Backend are running**
-- Make sure **both projects use the `Testing` launch profile**
-- Open the project in **VS Code**
-- Run the test setup and script from the terminal
-
-### Commands
+### Run the tests
 
 ```powershell
 cd E2E
@@ -68,3 +64,18 @@ npm install
 npx playwright install
 cd ..
 .\run-tests.ps1
+```
+
+### What the script does
+
+The script automatically:
+
+* stops any already running instances of the application
+* starts the backend with the `Testing` launch profile
+* starts the UI with the `DefaultProgram` launch profile
+* waits for both projects to become available
+* runs the Playwright tests
+* stops the started processes afterwards
+
+This makes the test flow easier to use and ensures the projects are started with the correct profiles for the current E2E setup.
+
